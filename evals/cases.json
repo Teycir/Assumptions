@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "description": "Benchmark cases for the assumption-ledger skill. Each case points at a fixture directory and its expected findings file. See rubric.md for grading instructions.",
+  "cases": [
+    {
+      "id": "duplicate-checkout",
+      "fixture_path": "fixtures/duplicate-checkout",
+      "input_files": ["checkout.ts"],
+      "expected_findings_file": "EXPECTED_FINDINGS.md",
+      "must_hit_priorities": ["P0"],
+      "notes": "Primary signal is missing idempotency on payment creation."
+    },
+    {
+      "id": "migration-rollout",
+      "fixture_path": "fixtures/migration-rollout",
+      "input_files": ["migration.sql", "worker.ts"],
+      "expected_findings_file": "EXPECTED_FINDINGS.md",
+      "must_hit_priorities": ["P0"],
+      "notes": "Two independent P0s: migration fails on existing rows, and worker assumes migration completion."
+    },
+    {
+      "id": "tenant-leak",
+      "fixture_path": "fixtures/tenant-leak",
+      "input_files": ["invoices.ts"],
+      "expected_findings_file": "EXPECTED_FINDINGS.md",
+      "must_hit_priorities": ["P0"],
+      "notes": "Checks that the model does not overclaim confidence about protections it cannot see (middleware, RLS)."
+    },
+    {
+      "id": "queue-redelivery",
+      "fixture_path": "fixtures/queue-redelivery",
+      "input_files": ["worker.ts"],
+      "expected_findings_file": "EXPECTED_FINDINGS.md",
+      "must_hit_priorities": ["P0"],
+      "notes": "Checks correct confidence calibration: at-least-once delivery should be Likely/Unknown, not asserted as Verified, unless the queue technology is confirmed."
+    }
+  ]
+}
