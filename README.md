@@ -1,6 +1,6 @@
 # Assumptions
 
-**Catch the hidden assumptions in your code before they break in production.**
+**Find what your code assumes before production proves it wrong.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Works with Claude Code](https://img.shields.io/badge/Works%20with-Claude%20Code-orange.svg)](#installation)
@@ -8,13 +8,12 @@
 [![No Build Step](https://img.shields.io/badge/Setup-No%20Build%20Step-brightgreen.svg)](#installation)
 [![No Cloud Required](https://img.shields.io/badge/No%20Cloud-100%25%20Local-green.svg)](#privacy-and-cost)
 
-**Find what your code assumes before production proves it wrong.**
-
-One invocation turns a diff into a reviewable table: every hidden
-assumption, the evidence behind it, what breaks if it's wrong, and the
-test that proves it one way or the other. It scopes its review,
-prioritizes the highest-risk paths, and states what it could not inspect
-— rather than promising to cover everything in a fixed amount of time.
+Turn a diff into an evidence-backed **Assumption Ledger**: the conditions
+that must hold, the repository evidence behind each one, what breaks if
+it's wrong, and the fastest test to settle each question. It scopes its
+review, prioritizes the highest-risk paths, and states what it could not
+inspect — rather than promising to cover everything in a fixed amount of
+time.
 
 Most production failures are not caused by obviously broken code.
 
@@ -96,12 +95,12 @@ format that's fast to review and hard to hand-wave through. See the
   - [Privacy and cost](#privacy-and-cost)
   - [Contributing](#contributing)
   - [🔎 Discovery \& Registries](#-discovery--registries)
+  - [License](#license)
   - [Support Development](#support-development)
   - [🌐 Related Projects](#-related-projects)
     - [Privacy \& Encryption](#privacy--encryption)
     - [Security Tools](#security-tools)
     - [MCP Security Servers](#mcp-security-servers)
-  - [License](#license)
 
 ---
 
@@ -269,6 +268,12 @@ it wherever you discover skills like this one.
 
 ---
 
+## License
+
+MIT — see `LICENSE`.
+
+---
+
 <!-- donation:eth:start -->
 <div align="center">
 
@@ -292,7 +297,8 @@ _Scan the QR code or copy the wallet address above._
 
 ## 🌐 Related Projects
 
-Explore more privacy-first and security tools:
+More projects from the same author — not part of Assumptions, listed for
+discovery only:
 
 ### Privacy & Encryption
 - **[Timeseal](https://github.com/Teycir/Timeseal)** - Time-locked encryption vault with Dead Man's Switch. AES-256 split-key crypto, ephemeral seals.
@@ -314,9 +320,3 @@ Explore more privacy-first and security tools:
 - **[nuclei-mcp](https://github.com/Teycir/nuclei-mcp)** - MCP server for Nuclei. Multi-target scanning, severity filtering.
 - **[nmap-mcp](https://github.com/Teycir/nmap-mcp)** - MCP server for Nmap. Stealth recon, vuln/NSE scanning.
 - **[frida-mcp](https://github.com/Teycir/frida-mcp)** - MCP server for Frida. Dynamic instrumentation, SSL pinning bypass.
-
----
-
-## License
-
-MIT — see `LICENSE`.

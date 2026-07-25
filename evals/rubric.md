@@ -42,9 +42,16 @@ the same underlying assumption, evidence basis, and consequence.
 For a given fixture:
 
 ```
-recall    = hits / (hits + partials*0.5 + misses)
-precision = 1 - (fabrications + unlabeled_speculation + generic_filler) / total_findings_reported
+weighted_recall = (hits + 0.5 * partials) / (hits + partials + misses)
+precision       = supported_nonfiller_findings / total_findings_reported
 ```
+
+Where `supported_nonfiller_findings` is the count of reported findings
+that are not fabricated, not unlabeled speculation, and not generic
+filler. Fabrication, unlabeled speculation, status/confidence conflation,
+over-flagging, and wrong-priority-direction should still be listed
+individually as qualitative violations per finding, even though they're
+folded into the single precision number above.
 
 A good run should have high recall on the documented `P0`/`P1` findings in
 particular — missing a P0 is worse than missing a P2 or P3.

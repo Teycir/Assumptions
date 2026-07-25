@@ -32,21 +32,21 @@ The route requires authentication but the database query fetches an
 invoice by ID alone, with no tenant or ownership filter in the query
 itself. Whether tenant isolation is enforced elsewhere (middleware,
 row-level security) could not be confirmed from the reviewed scope. This
-is flagged P0-priority with a Partially protected status: authentication
-exists, but that only confirms identity, not tenant scoping, and the gap
-becomes a confirmed release blocker if verification finds no scoping
-elsewhere.
+is flagged P0-priority with an Unknown status: authentication confirms
+identity, not tenant scoping, and this handler does not enforce tenant
+scope directly, so whether the caller is actually protected depends on
+layers outside the reviewed scope.
 
 ## Ledger
 
 | Priority | Assumption | Evidence | If false | Status | Falsification test | Recommended action | Evidence confidence |
 |---|---|---|---|---|---|---|---|
-| P0 | The authenticated caller can only ever receive invoices belonging to their own tenant. | `src/routes/invoices.ts:5-6` — `findUnique({ where: { id } })` filters only by primary key; no `organizationId`/`tenantId` clause is present in this query. | An authenticated user from tenant A can read tenant B's invoice by guessing or enumerating IDs. | Partially protected — the route requires authentication (identity is checked), but no tenant/ownership filter was found in this query, and whether row-level security enforces it elsewhere in the stack was not inspected. | Authenticate as tenant A, request an invoice ID known to belong to tenant B, and confirm the response is empty or forbidden. | Add an explicit tenant filter to the query, or confirm and document row-level security enforcing it at the database layer. | High |
+| P0 | The authenticated caller can only ever receive invoices belonging to their own tenant. | `src/routes/invoices.ts:5-6` — `findUnique({ where: { id } })` filters only by primary key; no `organizationId`/`tenantId` clause is present in this query. | An authenticated user from tenant A can read tenant B's invoice by guessing or enumerating IDs. | Unknown — this handler does not enforce tenant scope directly; whether database row-level security, query middleware, or a service-layer authorization check protects this query elsewhere in the stack was not inspected. | Authenticate as tenant A, request an invoice ID known to belong to tenant B, and confirm the response is empty or forbidden. | Confirm and document a database/service-layer tenant guard, or add an explicit ownership predicate to the query. | High |
 
 ## Existing safeguards
 
-- The route is registered behind authentication middleware at the router
-  level (confirms identity, not tenant scope).
+- Authentication middleware confirms caller identity at the router level.
+  It does not, by itself, demonstrate tenant-scoped authorization.
 
 ## Required verification before release
 
