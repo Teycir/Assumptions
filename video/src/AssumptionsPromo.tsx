@@ -804,8 +804,7 @@ export const AssumptionsPromo: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#080A0F" }}>
-      {/* Background Music */}
-      <Audio src={staticFile("audio/bgm/tonight-hiphop.mp3")} volume={0.24} />
+      {/* Background Music (Removed per user request) */}
 
       {/* Female Voiceover Tracks timed to exact scene durations */}
       <Sequence from={0} durationInFrames={265}>

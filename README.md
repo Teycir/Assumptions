@@ -2,6 +2,8 @@
 
 **Find what your code assumes before production proves it wrong.**
 
+![Assumptions Promo](assets/demo.gif)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Works with Claude Code](https://img.shields.io/badge/Works%20with-Claude%20Code-orange.svg)](#installation)
 [![Agent Agnostic](https://img.shields.io/badge/Agent-Agnostic-blueviolet.svg)](#installation)
