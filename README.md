@@ -1,22 +1,49 @@
-# Assumptions
+<h1 align="center">
+  <br>
+  <pre>
+    ___   __________ __  ____  _______  ______________  _   _______
+   /   | / ___/ ___// / / /  |/  / __ \/_  __/  _/ __ \/ | / / ___/
+  / /| | \__ \\__ \/ / / / /|_/ / /_/ / / /  / // / / /  |/ /\__ \ 
+ / ___ |___/ /__/ / /_/ / /  / / ____/ / / _/ // /_/ / /|  /___/ / 
+/_/  |_/____/____/\____/_/  /_/_/     /_/ /___/\____/_/ |_//____/  
+  </pre>
+  Assumptions
+  <br>
+</h1>
 
-**Find what your code assumes before production proves it wrong.**
+<h4 align="center">Find what your code assumes before production proves it wrong.</h4>
 
-![Assumptions Promo](assets/demo.gif)
+<p align="center">
+  <a href="#-use-cases">Features</a> •
+  <a href="#-how-it-works">How It Works</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#example">Examples</a>
+</p>
 
-<div align="center">
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="#installation"><img src="https://img.shields.io/badge/Works%20with-Claude%20Code-orange.svg" alt="Works with Claude Code"></a>
+  <a href="#installation"><img src="https://img.shields.io/badge/Agent-Agnostic-blueviolet.svg" alt="Agent Agnostic"></a>
+  <a href="#installation"><img src="https://img.shields.io/badge/Setup-No%20Build%20Step-brightgreen.svg" alt="No Build Step"></a>
+  <a href="#privacy-and-cost"><img src="https://img.shields.io/badge/No%20Cloud-100%25%20Local-green.svg" alt="No Cloud Required"></a>
+  <a href="#installation"><img src="https://img.shields.io/badge/Dependencies-Zero-4682B4.svg" alt="Zero Dependencies"></a>
+  <a href="#why-not-just-ask-your-ai-assistant-to-review-this"><img src="https://img.shields.io/badge/Evidence-Backed-blue.svg" alt="Evidence-Backed"></a>
+  <a href="#use-cases"><img src="https://img.shields.io/badge/Falsification-Tests%20Ready-2ea44f.svg" alt="Falsification Tests"></a>
+  <a href="#usage"><img src="https://img.shields.io/badge/Slash%20Command-%2Fassumptions--scan-8a2be2.svg" alt="Slash Command"></a>
+</p>
 
-[![Watch the demo video](https://img.youtube.com/vi/N6CU-brB83M/hqdefault.jpg)](https://youtu.be/N6CU-brB83M)
+<br>
 
-▶️ **[Click to watch the demo video](https://youtu.be/N6CU-brB83M)**
+<p align="center">
+  <img src="assets/demo.gif" alt="Assumptions Promo" width="850">
+</p>
 
-</div>
+<p align="center">
+  ▶️ <b><a href="https://youtu.be/N6CU-brB83M">Click to watch the full demo video</a></b>
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Works with Claude Code](https://img.shields.io/badge/Works%20with-Claude%20Code-orange.svg)](#installation)
-[![Agent Agnostic](https://img.shields.io/badge/Agent-Agnostic-blueviolet.svg)](#installation)
-[![No Build Step](https://img.shields.io/badge/Setup-No%20Build%20Step-brightgreen.svg)](#installation)
-[![No Cloud Required](https://img.shields.io/badge/No%20Cloud-100%25%20Local-green.svg)](#privacy-and-cost)
+<br>
 
 Turn a diff into an evidence-backed **Assumption Ledger**: the conditions
 that must hold, the repository evidence behind each one, what breaks if
@@ -49,6 +76,51 @@ It then produces a reviewable artifact:
 - a test or procedure to falsify it
 - a recommended control
 - an evidence confidence label and a release priority
+
+---
+
+## 🔄 How It Works
+
+```mermaid
+flowchart TD
+    subgraph Input ["1. Trigger & Scope Input"]
+        A["Git Diff / PR Changes"] --> B["Command: /assumptions-scan"]
+        A2["Deploy / Security / Concurrency Flags"] --> B
+    end
+
+    subgraph Analysis ["2. Evidence-Backed Risk Scanning"]
+        B --> C{"High-Risk Path Analysis"}
+        C -->|"Auth & Scope"| D1["Tenant Isolation & RLS Check"]
+        C -->|"Idempotency"| D2["Retry & Concurrent Request Check"]
+        C -->|"Migrations"| D3["Schema Transition & Rollout Order"]
+        C -->|"Messaging"| D4["Event Re-delivery & Ordering"]
+    end
+
+    subgraph Verification ["3. Status & Evidence Evaluation"]
+        D1 & D2 & D3 & D4 --> E{"Inspect Repo Evidence"}
+        E -->|"Verified Safe in Code"| F1["Status: Protected"]
+        E -->|"Partial Safeguard"| F2["Status: Partially Protected"]
+        E -->|"Missing Safeguard"| F3["Status: Unprotected"]
+        E -->|"Uninspected / Outside Scope"| F4["Status: Unknown"]
+    end
+
+    subgraph Output ["4. Actionable Artifact"]
+        F1 & F2 & F3 & F4 --> G["Assumption Ledger Table"]
+        G --> H1["Prioritized P0-P3 Findings"]
+        G --> H2["Exact File & Line Locators"]
+        G --> H3["Executable Falsification Tests"]
+        G --> H4["Reviewable Non-Invasive Controls"]
+    end
+
+    style Input fill:#161b22,stroke:#30363d,color:#e6edf3
+    style Analysis fill:#161b22,stroke:#58a6ff,color:#e6edf3
+    style Verification fill:#161b22,stroke:#d29922,color:#e6edf3
+    style Output fill:#161b22,stroke:#3fb950,color:#e6edf3
+    style F1 fill:#238636,stroke:#2ea44f,color:#fff
+    style F2 fill:#9e6a03,stroke:#d29922,color:#fff
+    style F3 fill:#da3633,stroke:#f85149,color:#fff
+    style F4 fill:#484f58,stroke:#6e7681,color:#fff
+```
 
 ---
 
@@ -96,6 +168,7 @@ slash-command support depends on your agent host.
 ## 📑 Table of Contents
 
 - [Assumptions](#assumptions)
+  - [🔄 How It Works](#-how-it-works)
   - [Why not just ask your AI assistant to review this?](#why-not-just-ask-your-ai-assistant-to-review-this)
   - [🎯 Use Cases](#-use-cases)
   - [📑 Table of Contents](#-table-of-contents)
