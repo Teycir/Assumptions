@@ -1,8 +1,6 @@
 # Assumptions
 
-> An agent-agnostic coding skill that turns a code change into an
-> evidence-backed ledger of hidden assumptions, failure modes, and
-> falsification tests.
+**Catch the hidden assumptions in your code before they break in production.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Works with Claude Code](https://img.shields.io/badge/Works%20with-Claude%20Code-orange.svg)](#installation)
