@@ -7,8 +7,8 @@
 <br>
 
 <p align="center">
-  <a href="#-use-cases">Features</a> •
-  <a href="#-how-it-works">How It Works</a> •
+  <a href="#how-it-works">How It Works</a> •
+  <a href="#use-cases">Use Cases</a> •
   <a href="#installation">Installation</a> •
   <a href="#usage">Usage</a> •
   <a href="#example">Examples</a>
@@ -74,9 +74,9 @@ It then produces a reviewable artifact:
 
 ## 📑 Table of Contents
 
-- [How It Works](#-how-it-works)
+- [How It Works](#how-it-works)
 - [Why not just ask your AI assistant?](#why-not-just-ask-your-ai-assistant-to-review-this)
-- [Use Cases](#-use-cases)
+- [Use Cases](#use-cases)
 - [Example](#example)
 - [Installation](#installation)
 - [Usage](#usage)
