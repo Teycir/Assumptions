@@ -4,7 +4,13 @@
 
 ![Assumptions Promo](assets/demo.gif)
 
+<div align="center">
+
 [![Watch the demo video](https://img.youtube.com/vi/N6CU-brB83M/hqdefault.jpg)](https://youtu.be/N6CU-brB83M)
+
+▶️ **[Click to watch the demo video](https://youtu.be/N6CU-brB83M)**
+
+</div>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Works with Claude Code](https://img.shields.io/badge/Works%20with-Claude%20Code-orange.svg)](#installation)
