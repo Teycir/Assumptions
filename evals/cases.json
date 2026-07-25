@@ -33,6 +33,14 @@
       "expected_findings_file": "EXPECTED_FINDINGS.md",
       "must_hit_priorities": ["P0"],
       "notes": "Checks correct evidence-confidence calibration: at-least-once delivery behavior should carry Medium/Low evidence confidence (or an Unknown status), not be asserted as High confidence, unless the queue technology's delivery semantics are confirmed."
+    },
+    {
+      "id": "refund-order",
+      "fixture_path": "tests",
+      "input_files": ["src/billing/refund.ts"],
+      "expected_findings_file": "test-notes/EXPECTED.md",
+      "must_hit_priorities": ["P0"],
+      "notes": "A diff that adds ownership verification to a refund endpoint. Tests whether the skill correctly credits the added safeguard while still identifying remaining risks (no idempotency, partial failure window, no test added)."
     }
   ]
 }

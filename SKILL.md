@@ -73,6 +73,51 @@ real-world claim it implies is still not fully knowable from the repo
 alone; say so in "Unknowns and boundaries" rather than overstating the
 status label.
 
+### The observed-vs-inferred test (apply before writing any confidence label)
+
+Before writing `High` evidence confidence, or a bare `Unprotected` status,
+ask: *is this built entirely from code, config, or tests actually open in
+front of me, or does it lean on a fact about the outside world that I'm
+assuming rather than reading?*
+
+Facts that are commonly assumed rather than read, and must NOT be written
+as `High` confidence (or used to justify a bare `Unprotected`) unless the
+repo itself confirms them:
+- A message queue's delivery guarantee (at-least-once, at-most-once,
+  exactly-once) — a property of the queue technology and its
+  configuration, not something a worker file's code shows by itself.
+- Whether request input is validated "somewhere else" (a gateway,
+  middleware, framework-level schema, a proxy) when no such layer was
+  inspected.
+- Whether authentication or authorization runs before a handler, when the
+  route registration or middleware chain was not opened.
+- Default behavior of a third-party SDK or platform (retry policy,
+  idempotency-key support, timeout defaults) not confirmed by reading its
+  config or docs in this repo.
+
+Rule: if a finding depends on one of these, do one of the following —
+never write `Unprotected` + `High` in this situation:
+1. Use status `Unknown` if it's genuinely unclear whether a safeguard
+   exists elsewhere (e.g. "input validation may exist upstream of this
+   handler; not inspected"), or
+2. Use status `Unprotected` with evidence confidence `Medium` or `Low` if
+   no safeguard was found *in the searched scope* and the risk is real
+   regardless of the external default (e.g. "even if the queue is
+   at-least-once by default, no dedup exists here to handle it" is a
+   legitimate finding — but confidence that redelivery *will* happen is
+   Medium, since the delivery model itself wasn't confirmed).
+
+The absence of a safeguard in the code you actually read can still be
+`High` confidence (you can see directly there's no idempotency key). What
+must not be `High` is any claim folded into "if false" or the consequence
+that depends on an unconfirmed external behavior actually occurring.
+
+| Situation | Wrong (rounds up) | Right |
+|---|---|---|
+| No dedup key in a queue worker; queue technology/config not confirmed | Unprotected, High | Unprotected (no dedup code — High on that specific fact), but the redelivery-will-happen consequence carries Medium, since at-least-once delivery is assumed, not confirmed |
+| `req.body.amount` unchecked in this handler; no router/middleware reviewed | Unprotected, High | Unknown, Low/Medium — validation may exist upstream and wasn't inspected |
+| No idempotency key passed to `stripe.charges.create()`, full handler read, no other layer to check | Unprotected, High | Unprotected, High — this is a direct code observation, not an inference, so High is correct |
+
 ### Phrasing assumptions as conditions
 
 Phrase each assumption as the condition that must hold, not as a
@@ -170,10 +215,23 @@ with runtime or operational knowledge the repository doesn't contain.
 
 5. Rank findings.
    - P0: security breach, irreversible corruption, duplicate financial action,
-     or unsafe migration likely to fail rollout.
+     an unsafe migration likely to fail rollout, or code that will crash or
+     corrupt data as a direct consequence of that same rollout (e.g. a worker
+     dereferencing a column the migration hasn't backfilled yet). A
+     rollout's failure mode is P0 whether it shows up in the migration
+     statement itself or in the first consumer that touches the changed
+     shape — rank by the consequence, not by which file the evidence
+     happened to be found in.
    - P1: meaningful user impact under plausible production conditions.
    - P2: a real risk that requires verification, documentation, or follow-up.
    - P3: low-impact observation or weak-evidence hypothesis.
+
+   When two findings are two sides of the same rollout failure (e.g. "the
+   migration fails on non-empty tables" and "the worker crashes on rows the
+   migration hasn't reached yet"), do not rank the second one lower just
+   because it's a consequence rather than the root cause — both are release
+   blockers and both get the same priority unless one is clearly narrower
+   in scope or likelihood than the other.
 
 6. Produce the ledger.
    - Prioritize high-evidence-confidence, high-impact findings.
@@ -184,6 +242,15 @@ with runtime or operational knowledge the repository doesn't contain.
      the count of findings omitted and their priorities so the user knows
      what was cut.
    - Prefer concise evidence over a broad speculative checklist.
+   - Before finalizing, re-scan the in-scope categories from step 3 once
+     more specifically for lower-priority (P2/P3) items — it's easy to stop
+     searching once a P0 or P1 is found, but a real P0 does not exclude a
+     real P2 in the same file (e.g. finding "no idempotency key" at the
+     application layer does not mean the third-party call itself was
+     checked for its own dedup token; finding a missing safeguard does not
+     mean the missing regression test alongside it was noted). This is a
+     final completeness pass, not a new investigation — it should not
+     change the P0/P1 findings already identified.
 
 7. Offer next steps.
    - Do not change code unless the user asks.
