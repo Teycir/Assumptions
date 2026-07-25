@@ -37,8 +37,9 @@
 </p>
 
 <br>
+
 **What must be true for this change not to break in production?**
-<br>
+
 Turn a diff into an evidence-backed **Assumption Ledger**: the conditions
 that must hold, the repository evidence behind each one, what breaks if
 it's wrong, and the fastest test to settle each question. It scopes its
