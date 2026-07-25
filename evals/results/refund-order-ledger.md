@@ -1,40 +1,40 @@
 # Assumptions: tests/src/billing/refund.ts
 
-**Scope:** `tests/src/billing/refund.ts` (24 lines) — a refund endpoint adding ownership verification before processing a Stripe refund and updating the order status.
+**Scope:** `tests/src/billing/refund.ts` (24 lines)
 **Overall risk:** Medium
 **Release blockers:** 0
 
 ## Executive summary
 
-A refund endpoint that correctly verifies the caller owns the order (good) but has no idempotency protection on the Stripe refund call and no transactional boundary between the refund and the status update. The ownership guard eliminates the highest-priority tenant-leak risk, but duplicate refunds on retry and partial-failure inconsistency remain unaddressed.
+A refund endpoint that correctly verifies the caller owns the order (safeguard credited). Remaining risks: no idempotency key on the Stripe refund call (duplicate refund on retry), no transactional boundary between refund and status update, and no check for already-refunded status. No regression test was added alongside the ownership fix.
 
 ## Ledger
 
 | Priority | Assumption | Evidence | If false | Status | Falsification test | Recommended action | Evidence confidence |
 |---|---|---|---|---|---|---|---|
-| P0 | Duplicate refund requests are prevented or safely deduplicated. | `refund.ts:16-18` — `stripe.refunds.create()` called with no idempotency key. No check for existing refund or `refunded` status before processing. | A retry or double-submit creates multiple Stripe refunds for a single order. | Unprotected — no idempotency key found in `refund.ts`; no pre-check for `order.status === 'refunded'` before creating the refund. | Submit `refundOrder` twice for the same order. Verify only one refund is issued and the order status remains `refunded`. | Add an idempotency key (from request header or derived key) to the Stripe refund call, or check `order.status` and reject if already refunded. | High |
-| P1 | Stripe refund always completes before the order status update. | `refund.ts:16-21` — `stripe.refunds.create()` then `db.orders.update()` in sequence without a transaction. | Refund succeeds but the status update fails, leaving the order marked as not-refunded despite real money being returned. This could trigger a second refund attempt. | Unprotected — no transaction wrapping the two operations; no compensating action if the update fails. | Inject a failure into `db.orders.update()` after a successful Stripe refund. Verify the order is recorded for reconciliation or automatically re-attempted. | Wrap refund + status update in a transaction, or add a compensating action (reverse refund) on update failure with monitoring. | High |
-| P1 | The order has not already been refunded before processing. | `refund.ts:5-21` — No check of `order.status` or existing refunds before calling Stripe. Only an existence check (`findById`) and ownership check exist. | A race condition or double-submit processes the same order twice. The second `stripe.refunds.create()` succeeds (Stripe allows multiple refunds), creating a duplicate payout. | Unprotected — no refunded-status guard found in `refund.ts`. | Submit concurrent duplicate refund requests for the same order. Verify only one refund is issued. | Add a status check (`if order.status === 'refunded'`) before processing, enforced with optimistic locking. | High |
-| P2 | `req.body.orderId` is a valid, existing order ID. | `refund.ts:5` — `db.orders.findById(req.body.orderId)`. No format validation before the DB call. | A malformed or non-existent `orderId` results in a null order, which is handled (404). Risk is low. | Protected — `findById` returns null for non-matching IDs and the handler returns 404. No format validation but the outcome is safe. | Send a request with a non-existent orderId. Verify 404. | Add format validation for earlier rejection, but not high priority. | High |
-| P2 | `req.user` is always populated with the authenticated user. | `refund.ts:5,12` — Uses `req.user.id` for ownership check. No guard for `req.user` presence. | The endpoint is reachable without auth, making `req.user` undefined and the ownership check meaningless. | Unknown — no auth middleware visible in `refund.ts`. Router-level auth coverage not inspected. | Hit the endpoint without authentication. Verify 401/403. | Confirm auth middleware coverage at the router level. | Medium |
-| P2 | `order.chargeId` is always present on found orders. | `refund.ts:17` — `charge: order.chargeId` passed directly to Stripe without a null check. | An order record exists but has no `chargeId` (e.g., created through a path that bypassed payment). The Stripe call would fail with unclear error. | Unknown — no guarantee visible in `refund.ts` that all orders have `chargeId`. | Create an order without a chargeId (if possible) and attempt to refund it. Verify a clear error message. | Add a check that `order.chargeId` exists before calling Stripe. | Low |
+| P0 | Duplicate refund requests are prevented or safely deduplicated. | `refund.ts:16-18` — `stripe.refunds.create()` called with no idempotency key. No check for existing refund or `refunded` status before processing. | Retry or double-submit creates multiple Stripe refunds for one order. | Unprotected — no idempotency key found in `refund.ts`; no pre-check for `order.status === 'refunded'`. | Submit refundOrder twice for same order. Verify only one refund issued, status remains `refunded`. | Add idempotency key to Stripe refund call, or check `order.status` and reject if already refunded. | High |
+| P1 | Stripe refund and order status update succeed or fail together. | `refund.ts:16-21` — sequential calls, no transaction, no compensating action. | Refund succeeds but `db.orders.update()` fails. Money returned but order still marked not-refunded, risking second refund attempt. | Unprotected — no transaction or compensating action found in `refund.ts`. | Inject failure into `db.orders.update()` after successful refund. Verify order recorded for reconciliation or auto-retry. | Wrap refund + status update in a transaction, or add compensating action (reverse refund) on update failure. | High |
+| P1 | The order has not already been refunded before processing. | `refund.ts:5-21` — No check of `order.status` or existing refunds before Stripe call. Only existence check + ownership check. | Race condition or double-submit processes same order twice. Stripe allows multiple refunds on same charge. | Unprotected — no `refunded` status guard found in `refund.ts`. | Submit concurrent duplicate refund requests for same order. Verify only one refund created. | Add `if order.status === 'refunded'` guard with optimistic locking. | High |
+| P2 | The ownership check added by this diff is covered by a regression test. | `refund.ts:12-14` — ownership check exists but no corresponding test file found in the reviewed scope. | A future refactor accidentally removes the ownership check and no test catches it. | Unprotected — no regression test found for the ownership check. Scope searched: `refund.ts` and no test files referencing this function were visible in the diff. | Check whether a test exists for the ownership path. If not, add one. | Add a test that verifies 403 for cross-user refund attempts. | High — absent test is directly observed. |
+| P2 | `req.user.id` is always populated when this handler runs. | `refund.ts:12` — uses `req.user.id` for ownership check. No guard for `req.user` presence. | Endpoint reachable without auth. `req.user` is undefined, ownership check is meaningless. | Unknown — no auth middleware visible in `refund.ts`. Router-level auth not inspected. | Hit endpoint without auth. Verify 401/403. | Confirm auth middleware coverage at router level. | Medium |
+| P2 | `order.chargeId` is always present on found orders. | `refund.ts:17` — `charge: order.chargeId` passed to Stripe without null check. | Order exists but has no `chargeId` (bypassed payment path). Stripe call fails with unclear error. | Unknown — no guarantee visible in `refund.ts` that all orders have `chargeId`. | Create order without chargeId (if possible) and attempt refund. Verify clear error. | Add check that `order.chargeId` exists before calling Stripe. | Low |
 
 ## Existing safeguards
 
-- **Ownership check** (`refund.ts:12-14`): Verifies `order.userId === req.user.id` before processing, preventing tenant-inappropriate refund access.
-- **Existence check** (`refund.ts:7-9`): Returns 404 if the order is not found.
+- **Ownership check** (`refund.ts:12-14`): Verifies `order.userId === req.user.id` before processing refund — credited as Partially protected (req.user population not confirmed).
+- **Existence check** (`refund.ts:7-9`): Returns 404 if order not found.
 
 ## Required verification before release
 
 - [ ] Add idempotency key to `stripe.refunds.create()` or pre-check for already-refunded status.
-- [ ] Add transactional protection between the refund and the status update.
-- [ ] Add `order.status !== 'refunded'` guard before processing.
+- [ ] Add transactional protection between refund and status update.
+- [ ] Add `order.status !== 'refunded'` guard.
+- [ ] Add regression test for the ownership check.
 - [ ] Verify auth middleware coverage for this route.
-- [ ] Add a null check for `order.chargeId`.
 
 ## Unknowns and boundaries
 
-- Router-level auth and validation middleware was not inspected.
-- Stripe's own idempotency behavior (the API supports `Idempotency-Key` header) is available but not used.
-- The database may have constraints (e.g., unique order ID on refunds) that partially protect against duplicates — not inspected.
-- Concurrency model (optimistic locking, DB transaction isolation) is not confirmed.
+- Router-level auth and validation middleware not inspected.
+- Stripe's Idempotency-Key header is available but not used.
+- Database constraints (unique order ID on refunds) may partially protect — not inspected.
+- Concurrency model (optimistic locking, transaction isolation) not confirmed.

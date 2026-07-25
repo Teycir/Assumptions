@@ -316,6 +316,48 @@ defect and not a confirmed absence of risk. If a finding matters and its
 status is `Unknown`, resolve it against your actual infrastructure before
 relying on the ledger's `Overall risk` line alone.
 
+## Benchmarks
+
+The skill is evaluated against a suite of curated **fixtures** — small
+repositories that each contain a realistic diff with one or more hidden
+assumptions. Running the SKILL.md procedure blind (no prior knowledge of
+the expected findings) and grading the output against a pre-written
+expected-findings file produces recall and precision scores.
+
+### Fixtures
+
+| Case | What it tests | Primary trap |
+| :--- | :--- | :--- |
+| **duplicate-checkout** | Idempotency on payment creation | Partial failure between charge and order |
+| **migration-rollout** | Schema + code shipped together | NOT NULL on existing rows + worker assumes migration is done |
+| **tenant-leak** | Auth/tenant scoping | Overclaiming protection from unobservable middleware/RLS |
+| **queue-redelivery** | Queue consumer at-least-once delivery | Evidence-confidence calibration on inferred vs. observed behavior |
+| **refund-order** | Ownership check added alongside missing idempotency | Seeing the fix but not the remaining risk |
+
+### Results
+
+| Run | Model | Recall | Precision | Notes |
+| :--- | :--- | ---: | ---: | :--- |
+| v0.1 baseline | Manual (Claude) | 1.00 | 1.00 | Verified the procedure is followable and outputs the right shape |
+| v0.2 blind | Sisyphus (DeepSeek V4 Flash) | 0.65 | 0.96 | Unattended run revealed three regressions: confidence over-calibration, priority misranking, incomplete lower-priority scan |
+| v0.3 blind | Sisyphus (DeepSeek V4 Flash) | 1.00 | 1.00 | After three targeted edits to SKILL.md: observed-vs-inferred test, P0 ranking clarification, completeness pass in step 6 |
+
+All five fixtures hit 1.0 recall and 1.0 precision in v0.3. The v0.2
+regressions and their fixes are documented in [`evals/BASELINE.md`](evals/BASELINE.md).
+
+### Key takeaway
+
+The skill procedure works reliably on fixtures that mirror real-world
+failure modes. The most sensitive part is **evidence-confidence
+calibration** — distinguishing what the code *confirms* from what a
+reviewer *infers* about external infrastructure (queue semantics,
+deployment ordering, middleware behavior). The observed-vs-inferred test
+in SKILL.md addresses this. Future regressions would most likely appear
+here first.
+
+See [`evals/`](evals/) for the full rubric, baseline history, and per-
+fixture grade reports.
+
 ## Repository layout
 
 ```

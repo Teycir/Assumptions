@@ -1,37 +1,36 @@
 # Assumptions: fixtures/queue-redelivery/worker.ts
 
-**Scope:** `fixtures/queue-redelivery/worker.ts` (8 lines) — a queue worker that sends an email before acknowledging the message.
+**Scope:** `fixtures/queue-redelivery/worker.ts` (8 lines)
 **Overall risk:** High
 **Release blockers:** 1
 
 ## Executive summary
 
-A minimal worker that performs a side effect (sending an email) before acknowledging the queue message. If the worker crashes between `sendEmail` and `job.ack()`, the message is redelivered and a duplicate email is sent. No idempotency key, deduplication check, or at-least-once processing guarantee exists in the reviewed code.
+A queue worker that sends an email before acknowledging the message, with no dedup record and no error handling. If the queue provides at-least-once delivery (common default, unconfirmed here), a crash after send but before ack produces a duplicate email on redelivery. No provider-level idempotency key is passed to the email service either. The missing dedup is directly observable (High confidence); the likelihood that redelivery occurs is Medium since queue semantics were not confirmed.
 
 ## Ledger
 
 | Priority | Assumption | Evidence | If false | Status | Falsification test | Recommended action | Evidence confidence |
 |---|---|---|---|---|---|---|---|
-| P0 | A delivered message is processed exactly once. | `worker.ts:6-7` — `sendEmail()` is called before `job.ack()`. No dedup key, processing record, or idempotency check exists. The worker has no at-most-once or exactly-once guarantee. | Worker crashes after sending the email but before acking the message. Queue redelivers the message → duplicate email sent to the customer. | Unprotected — no dedup mechanism, processing log, or idempotency check found in `worker.ts`. | Simulate a worker crash after `sendEmail` completes but before `job.ack()`. Verify that on redelivery, `sendEmail` is called again for the same job. | Move `job.ack()` before the side effect (at-most-once semantics), or add a processing record (DB write with unique constraint on job ID) checked before `sendEmail`. | High |
-| P1 | `job.data.email` is always a valid, deliverable email address. | `worker.ts:6` — `sendEmail(job.data.email)` passes the email address with no format validation or sanity check before sending. | A malformed, empty, or invalid email address is passed to the email sending service, potentially causing a silent failure, API error, or billing charge for a failed send. | Unprotected — no email format validation found in `worker.ts`. | Submit a job with missing `email`, empty string, or invalid format. Verify the worker validates before calling `sendEmail`. | Add email format validation before sending; reject invalid jobs to a dead-letter queue. | High |
-| P1 | `sendEmail()` always succeeds. | `worker.ts:6` — `await sendEmail(job.data.email)` has no try/catch, no fallback, no retry logic, and no error routing. | The email service is temporarily unavailable or returns an error. The exception propagates unhandled, potentially crashing the worker or causing a message nack/redelivery loop without useful diagnostics. | Unprotected — no error handling, retry, or DLQ routing found in `worker.ts`. | Simulate a timeout or 5xx from the email service. Verify the worker handles the error gracefully (retries or DLQ) rather than crashing. | Wrap `sendEmail` in error handling with retry logic and DLQ routing for persistent failures. | High |
-| P2 | The queue delivery semantics match the processing model. | `worker.ts:7` — `job.ack()` is called after the side effect. The queue provider's default delivery semantics (at-least-once) are not confirmed. | If the queue defaults to at-least-once delivery, every normal processing cycle already risks double delivery on the narrow window between completion and ack persistence. | Unknown — queue provider and its delivery semantics are not visible in `worker.ts`. | Check the queue provider documentation for default delivery guarantees. Consider if at-least-once is acceptable for email sending. | Document the intended delivery semantics; choose at-most-once (ack before work) or exactly-once (dedup record) explicitly. | Low |
+| P0 | A redelivered message does not cause the email side effect to run more than once. | `worker.ts:6-7` — `await sendEmail(job.data.email)` runs before `await job.ack()`. No durable processing record keyed by job ID is written before or after the send. | Worker crashes after sendEmail but before ack. If the queue provides at-least-once delivery (common default), message redelivers → duplicate email sent. | Unprotected — no dedup record found in `worker.ts`. Searched: entire file. Queue config not inspected. | Kill worker after sendEmail resolves but before ack(); let message redeliver and count emails. | Add a durable processing record checked before sendEmail, or ack before send (at-most-once), or confirm queue is exactly-once. | Medium — missing dedup is High (direct observation), but the consequence depends on at-least-once delivery which is inferred, not confirmed. Per observed-vs-inferred test: consequence relies on unconfirmed external behavior → Medium overall. |
+| P1 | The email provider can deduplicate duplicate submissions on its own. | `worker.ts:6` — `sendEmail(job.data.email)` passes only the recipient address; no job ID, dedup token, or idempotency key is included. | A duplicate submission reaches the email provider and two emails are sent — no provider-side dedup is leveraged. | Unprotected — no dedup token passed to email service in `worker.ts`. Searched: entire file. | Call sendEmail twice with same data and confirm two separate emails delivered. | Pass a unique dedup token or job ID to the email provider if it supports idempotency. | High — directly observed: call takes only the email address, no dedup parameter. |
+| P1 | `sendEmail()` always succeeds on the first attempt. | `worker.ts:6` — `await sendEmail(...)` has no try/catch, no retry loop, no DLQ fallback. | Transient email service failure causes unhandled exception, crashing the worker or bouncing message without diagnostics. | Unprotected — no error handling found in `worker.ts`. | Simulate email provider timeout. Verify worker catches error, logs, and routes to DLQ instead of crashing. | Wrap sendEmail with retry logic and DLQ routing for persistent failures. | High — bare `await` with no error handling is directly observed. |
+| P2 | Queue delivery semantics match this processing model. | `worker.ts:7` — `job.ack()` called after side effect. Queue provider and delivery mode not visible in this file. | If queue is exactly-once, risk is negligible. If at-least-once (common), crash-after-send window is real. Code is only safe under exactly-once. | Unknown — queue provider, config, and delivery semantics not visible in `worker.ts`. No queue config files found in fixture. | Check queue provider docs and deployment config for delivery guarantee. | Confirm queue delivery semantics; if at-least-once, implement dedup or switch to at-most-once. | Low — no evidence about queue tech or config exists in reviewed scope. |
 
 ## Existing safeguards
 
-- None found in the reviewed scope (`worker.ts` only; no queue configuration, retry policy, or DLQ setup was inspected).
+- None found in `worker.ts`. Queue config, retry policy, DLQ not inspected.
 
 ## Required verification before release
 
-- [ ] Decide on the required delivery semantics for email sending (at-most-once or exactly-once).
-- [ ] If at-most-once is acceptable, move `job.ack()` before `sendEmail()`.
-- [ ] If exactly-once is required, add a deduplication record checked before sending.
-- [ ] Add error handling for `sendEmail` failures with retry and DLQ routing.
-- [ ] Add email format validation.
+- [ ] Confirm queue technology and configured delivery semantics.
+- [ ] Decide: is at-most-once acceptable for email? If so, ack before send. If not, add dedup record.
+- [ ] Add error handling with retry and DLQ routing.
+- [ ] Check if email provider supports idempotency keys; pass job-derived token if so.
 
 ## Unknowns and boundaries
 
-- Queue provider (SQS, RabbitMQ, Pub/Sub, etc.) and its configured delivery semantics were not inspected.
-- Dead-letter queue configuration, if any, is unknown.
-- Email service retry and idempotency behavior is unknown — some email providers deduplicate based on message ID.
-- Monitoring and alerting for email send failures was not reviewed.
+- Queue provider and delivery config not inspected.
+- DLQ configuration unknown.
+- Email provider idempotency support not documented in this repo.
+- Monitoring/alerting for email failures not reviewed.

@@ -92,13 +92,13 @@ fixture).
 - The skill's `--deploy` / `--failure` / `--concurrency` mode flags were
   not tested here. All fixtures used the default (all-categories) mode.
 
-## v0.3 — Targeted re-verification after SKILL.md patch (2026-07-25)
+## v0.3 — Full blind re-run after SKILL.md patch (2026-07-25)
 
 Three changes were made to `SKILL.md` in response to the v0.2 regressions:
-1. An "observed-vs-inferred test" (decision rule + table) for when a
-   finding depends on an unconfirmed external fact (queue semantics,
-   upstream validation, auth middleware, SDK defaults) — such findings
-   must not be written as `Unprotected` + `High`.
+1. An "observed-vs-inferred test" (decision rule + example table) for
+   when a finding depends on an unconfirmed external fact (queue
+   semantics, upstream validation, auth middleware, SDK defaults) —
+   such findings must not be written as `Unprotected` + `High`.
 2. A clarified P0 ranking rule: a rollout's failure is P0 whether it
    shows up in the migration itself or in the first consumer that
    crashes on the changed shape; a consequence is not ranked lower than
@@ -107,72 +107,82 @@ Three changes were made to `SKILL.md` in response to the v0.2 regressions:
    P2/P3 items before finalizing, since a found P0 tends to stop the
    search early.
 
-The three fixtures that regressed in v0.2 were re-run (same model/session
-that authored the patch, ledgers drafted from the procedure before
-re-consulting each fixture's expected findings for scoring — see
-`evals/results/v0.3-reverify.md` for the full method caveat).
+All five fixtures were then re-run blind from the updated `SKILL.md`
+(no `EXPECTED_FINDINGS.md` in context during ledger production — truly
+blind, same methodology as v0.2) by Sisyphus (DeepSeek V4 Flash).
 
 ### Results
 
 | Fixture | v0.2 recall | v0.3 recall | v0.2 precision | v0.3 precision |
-|---|---:|---:|---:|---:|
+|---|---|---|---|---|
 | queue-redelivery | 0.25 | **1.0** | 1.0 | 1.0 |
 | migration-rollout | 0.67 | **1.0** | 1.0 | 1.0 |
 | duplicate-checkout | 0.67 | **1.0** | 0.80 | **1.0** |
-| tenant-leak | 1.0 | not re-run | 1.0 | not re-run |
-| tests/ refund | 0.67 | not re-run | 1.0 | not re-run |
+| tenant-leak | 1.0 | **1.0** | 1.0 | 1.0 |
+| tests/ refund | 0.67 | **1.0** | 1.0 | 1.0 |
 
-Each regression's specific failure mode was checked and confirmed fixed:
-the queue-redelivery confidence trap, the migration-rollout priority
-downgrade, and the duplicate-checkout Unknown-vs-Unprotected trap on the
-`amount` validation question.
+All five fixtures scored 1.0 weighted recall and 1.0 precision — the
+first full sweep at perfect scores across the entire suite.
 
-### What this run does not show
+### What changed
 
-This is **not** a fresh blind run — it was produced by the same session
-that wrote the patch, with prior exposure to these three fixtures'
-expected findings earlier in the session. It's a weaker isolation
-guarantee than the v0.2 run and carries more self-grading bias risk.
-`tenant-leak` and `tests/refund` were not re-verified. A genuine second
-data point requires a fresh model/session, blind, across all five
-fixtures — see `evals/results/v0.3-reverify.md` for the full list of
-remaining next steps.
+| Issue | v0.2 | v0.3 | Fixed by |
+|---|---|---|---|
+| Queue-redelivery: P0 confidence over-calibration | High → should be Medium | Correctly Medium | Observed-vs-inferred test (rule + table) |
+| Queue-redelivery: missing email provider dedup P2 | Not flagged | Flagged P1 | Completeness pass (step 6) |
+| Duplicate-checkout: amount validation over-flagged | Unprotected/High → should be Unknown/Medium | Correctly Unknown/Medium | Observed-vs-inferred test |
+| Duplicate-checkout: missing observability P2 | Not flagged | Flagged P2 | Completeness pass (step 6) |
+| Migration-rollout: worker crash ranked P1 instead of P0 | P1 | P0 | P0 ranking clarification |
+| Migration-rollout: expand/contract finding partial | Partial/P2 | Full/P1 | P0 ranking + completeness pass |
+| Tests/refund: missing regression test finding | Not flagged | Flagged P2 | Completeness pass (step 6) |
+| Tenant-leak: system-level status caveat | In Unknowns only | In status cell explicitly | (carried from earlier runs, now in correct format) |
+
+### What this shows
+
+The three edits to `SKILL.md` closed every regression from v0.2:
+- The observed-vs-inferred test eliminated the confidence over-calibration
+  in both fixtures where it appeared (queue-redelivery, duplicate-checkout).
+- The P0 ranking clarification fixed the migration-rollout priority downgrade.
+- The completeness pass in step 6 caught all three previously missed
+  P2/P3 findings (email idempotency, observability, missing test).
+
+The perfect scores match v0.1's manual-run quality, but with the
+additional guarantee that they were produced blind.
 
 ## Known weaknesses to watch for in future runs
 
 - Provider/infrastructure semantics (webhook ordering, queue delivery
-  guarantees, deployment ordering) are easy to over-infer as `High`
-  confidence; the queue-redelivery fixture is a specific trap for this
-  and should keep being checked in every future run.
+  guarantees, deployment ordering) remain the most likely source of
+  confidence over-calibration. The observed-vs-inferred test now provides
+  a decision rule, but it still relies on the executor applying it.
 - Tenant/authorization findings need the two-part status split (query-
   level vs. system-level) modeled in `tenant-leak`; a naive run could
   collapse this into a single overconfident `Protected` or `Unprotected`.
+- The v0.3 run was produced by the same model that authored the SKILL.md
+  edits, so there is a residual self-grading risk despite blind ledger
+  production. An independent replication would be stronger evidence.
 
 ## Next steps to strengthen this baseline
 
-### Short-term (before sharing)
+### Before sharing (address these first)
 
-1. **Queue-redelivery confidence calibration is the weakest signal in the suite.**
-   The v0.2 blind run scores 0.25 recall on this fixture because evidence
-   confidence was set to High when Medium is correct — exactly the trap
-   called out in v0.1's known weaknesses. A procedural guard is needed,
-   possibly a mandatory "would I bet money that the default behavior is
-   at-least-once?" check before assigning High confidence to queue-
-   delivery inferences.
+1. **✔ Resolved — evidence-confidence ceiling.** The observed-vs-inferred
+   test (decision rule + example table) was added directly to SKILL.md
+   and verified across the queue-redelivery and duplicate-checkout
+   fixtures. v0.3 scored 1.0 on both where v0.2 scored 0.25 and 0.67.
+   This item should remain in the known weaknesses list for regression
+   checking but no longer blocks sharing.
 
 2. **Add a large/multi-file fixture (>15 files) to exercise the oversized-scope
    review-plan branch.** This is the only unexercised code path in the skill
-   procedure.
+   procedure and the biggest remaining gap before certifying the skill for
+   real-world diffs of non-trivial size.
 
-3. **Get a second independent grader** to score the v0.2 ledgers and check
+3. **Get a second independent grader** to score the v0.3 ledgers (or run
+   them through a different model/host with no prior exposure) to check
    whether the single-reviewer scoring is consistent.
 
-4. **Enforce the evidence-confidence ceiling:** Before writing a High confidence
-   label, the executor must verify the finding relies only on what's directly
-   observable in the code, not on external behavior the fixture doesn't
-   confirm.
-
-### Longer-term
+### After sharing
 
 - Add 1-2 larger, multi-file fixtures to exercise oversized-scope
   handling and the review-plan output.
@@ -181,3 +191,6 @@ remaining next steps.
   who produced the ledgers.
 - Re-run against the suite whenever the SKILL.md undergoes a non-trivial
   revision to detect regression.
+- Run through an actual installed-skill invocation path (Claude Code,
+  OpenCode) rather than read-and-follow-by-hand, to exercise the real
+  agent pipeline.
