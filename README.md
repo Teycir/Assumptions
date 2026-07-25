@@ -4,7 +4,17 @@
 > evidence-backed ledger of hidden assumptions, failure modes, and
 > falsification tests.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Works with Claude Code](https://img.shields.io/badge/Works%20with-Claude%20Code-orange.svg)](#installation)
+[![Agent Agnostic](https://img.shields.io/badge/Agent-Agnostic-blueviolet.svg)](#installation)
+[![No Build Step](https://img.shields.io/badge/Setup-No%20Build%20Step-brightgreen.svg)](#installation)
+[![No Cloud Required](https://img.shields.io/badge/No%20Cloud-100%25%20Local-green.svg)](#privacy-and-cost)
+
 **Find what your code assumes before production proves it wrong.**
+
+One command turns a diff into a reviewable table: every hidden assumption,
+the evidence behind it, what breaks if it's wrong, and the test that proves
+it one way or the other — in about the time it takes to read the PR.
 
 Most production failures are not caused by obviously broken code.
 
@@ -33,6 +43,28 @@ It then produces a reviewable artifact:
 
 ---
 
+## Why not just ask your AI assistant to review this?
+
+You can ask any coding agent "what could go wrong with this diff?" and get
+an answer. The problem is that a free-form answer is easy to skim and hard
+to act on — and there's no standard forcing it to show its work.
+
+| | Generic "review this" prompt | Assumptions |
+| :--- | :--- | :--- |
+| **Output shape** | Prose, varies every run | Fixed table: Assumption, Evidence, If false, Protection, Falsification test, Action, Confidence |
+| **Evidence** | Often asserted, not shown | Required — every entry cites the exact repository evidence, or is downgraded to `Unknown` |
+| **Severity** | "This seems risky" | Explicit P0–P3 priority, argued from consequence, not tone |
+| **Confidence** | Implied by wording | Explicit label: Verified / Likely / Unknown / Assumption to verify |
+| **Actionability** | You still have to invent a test | Every finding ships with a concrete falsification test or verification step |
+| **False positives** | Generic "edge case" lists pad the output | Nothing is reported without evidence — an unclear case is labeled `Unknown`, not flagged as a bug |
+| **Consistency across reviewers** | Depends on how the prompt was phrased | Same ledger format every time, so PRs are comparable across the team |
+
+The skill doesn't replace your agent's judgment — it constrains it to a
+format that's fast to review and hard to hand-wave through. See the
+[Example](#example) below for a real ledger, not a description of one.
+
+---
+
 ## 🎯 Use Cases
 
 | Scenario | What happens without Assumptions | What Assumptions does |
@@ -51,6 +83,7 @@ It then produces a reviewable artifact:
 ## 📑 Table of Contents
 
 - [Assumptions](#assumptions)
+  - [Why not just ask your AI assistant to review this?](#why-not-just-ask-your-ai-assistant-to-review-this)
   - [🎯 Use Cases](#-use-cases)
   - [📑 Table of Contents](#-table-of-contents)
   - [Example](#example)
@@ -59,6 +92,8 @@ It then produces a reviewable artifact:
   - [What this is not](#what-this-is-not)
   - [Repository layout](#repository-layout)
   - [Privacy and cost](#privacy-and-cost)
+  - [Contributing](#contributing)
+  - [🔎 Discovery \& Registries](#-discovery--registries)
   - [Support Development](#support-development)
   - [🌐 Related Projects](#-related-projects)
     - [Privacy \& Encryption](#privacy--encryption)
@@ -83,11 +118,42 @@ It then produces a reviewable artifact:
 
 ## Installation
 
-Copy this repository into your coding agent's skills directory, or
-reference `SKILL.md` directly from your agent configuration. Written to
+No build step, no dependencies, no account. `SKILL.md` is the entire
+skill — copy it into wherever your agent looks for skills.
+
+**Claude Code (project-level):**
+
+```bash
+mkdir -p .claude/skills/assumptions
+cp /path/to/Assumptions/SKILL.md .claude/skills/assumptions/SKILL.md
+```
+
+**Claude Code (user-level, available in every project):**
+
+```bash
+mkdir -p ~/.claude/skills/assumptions
+cp /path/to/Assumptions/SKILL.md ~/.claude/skills/assumptions/SKILL.md
+```
+
+Replace `/path/to/Assumptions` with wherever you cloned this repository
+(e.g. `git clone <this-repo-url>` first, or download `SKILL.md` directly
+from this repo's file view and save it to that path).
+
+**Any other agent:** clone or download this repository and point your
+agent's skill/instruction configuration at `SKILL.md`. It's written to
 work with any agent that can read a `SKILL.md`-style instruction file and
-inspect a local Git repository (Claude Code, and other coding agents with
-equivalent capabilities). No build step is required.
+inspect a local Git repository — Claude Code is the reference target, but
+nothing here is Claude Code-specific.
+
+Verify it's picked up:
+
+```bash
+/assumptions-scan
+```
+
+If your agent doesn't auto-discover skills, paste the contents of
+`SKILL.md` directly into a system prompt or custom instructions field —
+it's a self-contained Markdown document.
 
 ## Usage
 
@@ -132,6 +198,23 @@ Assumptions/
 Assumptions is a local, open-source skill. It has no hosted backend,
 telemetry, database, or account requirement. You use it with your own
 coding agent environment.
+
+## Contributing
+
+This project stays intentionally small on purpose — the value is in a
+disciplined method and a trustworthy output format, not feature surface
+area. The highest-leverage contribution is a new **example** or
+**fixture** showing a realistic hidden assumption the skill should catch.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the exact format — most
+contributions are a single Markdown file.
+
+## 🔎 Discovery & Registries
+
+If you find this useful, a star or a mention helps other people find it.
+Assumptions is a plain `SKILL.md`, so it's compatible with general-purpose
+agent-skill directories and marketplaces (e.g. awesome-agent-skills lists,
+`skills.sh`, SkillsMP) without any extra packaging — feel free to submit
+it wherever you discover skills like this one.
 
 ---
 
