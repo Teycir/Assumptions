@@ -72,6 +72,20 @@ It then produces a reviewable artifact:
 
 ---
 
+## 📑 Table of Contents
+
+- [How It Works](#-how-it-works)
+- [Why not just ask your AI assistant?](#why-not-just-ask-your-ai-assistant-to-review-this)
+- [Use Cases](#-use-cases)
+- [Example](#example)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Limits](#limits)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
 ## 🔄 How It Works
 
 ```mermaid
@@ -155,34 +169,6 @@ slash-command support depends on your agent host.
 | **Turning a risk into a regression test** | Someone identifies a risk in review, but writing the actual test is left as a follow-up that often never happens | `/assumptions-scan --tests` outputs ready-to-write falsification tests for every finding, ordered by priority |
 | **Onboarding to an unfamiliar codebase or diff** | A large or unfamiliar diff gets a shallow pass because there's too much to hold in your head at once | The skill's oversized-scope handling picks the highest-risk subset (auth, payments, migrations, concurrency-sensitive paths) and explicitly states what was excluded |
 | **Deciding whether a concern is worth blocking on** | Findings get flagged as "critical" based on gut feel, or dismissed as "probably fine" with no real justification | Every finding carries an explicit status (Protected / Partially protected / Unprotected / Unknown), an evidence confidence label (High / Medium / Low), and a priority (P0–P3), so severity is argued from evidence, not vibes |
-
----
-
-## 📑 Table of Contents
-
-- [Assumptions](#assumptions)
-  - [🔄 How It Works](#-how-it-works)
-  - [Why not just ask your AI assistant to review this?](#why-not-just-ask-your-ai-assistant-to-review-this)
-  - [🎯 Use Cases](#-use-cases)
-  - [📑 Table of Contents](#-table-of-contents)
-  - [Example](#example)
-    - [Example ledgers](#example-ledgers)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [What this is not](#what-this-is-not)
-  - [Limits](#limits)
-  - [Repository layout](#repository-layout)
-  - [Privacy and cost](#privacy-and-cost)
-  - [Contributing](#contributing)
-  - [🔎 Discovery \& Registries](#-discovery--registries)
-  - [License](#license)
-  - [Support Development](#support-development)
-  - [🌐 Related Projects](#-related-projects)
-    - [Privacy \& Encryption](#privacy--encryption)
-    - [Security Tools](#security-tools)
-    - [MCP Security Servers](#mcp-security-servers)
-
----
 
 ## Example
 
