@@ -11,17 +11,23 @@ the same underlying assumption, evidence basis, and consequence.
 
 | Score | Meaning |
 |---|---|
-| **Hit** | The ledger contains a finding matching the assumption, with evidence tied to the actual fixture code, a plausible failure mode, and a testable falsification step. |
-| **Partial** | The ledger identifies the general area of risk (e.g. "no idempotency") but is missing evidence, a falsification test, or materially understates/overstates priority or confidence. |
+| **Hit** | The ledger contains a finding matching the assumption, with evidence tied to the actual fixture code (ideally with a file/line locator), a plausible failure mode, and a testable falsification step. |
+| **Partial** | The ledger identifies the general area of risk (e.g. "no idempotency") but is missing evidence, a falsification test, or materially mislabels status, evidence confidence, or priority. |
 | **Miss** | The expected finding does not appear in the ledger at all. |
 
 ## Precision checks (penalize these)
 
 - **Fabricated evidence:** A finding cites code, a config value, or a test
-  that does not exist in the fixture.
-- **Unlabeled speculation:** A finding presents an unverified claim as
-  `Verified` when the fixture provides no such evidence (should be
-  `Likely`, `Unknown`, or `Assumption to verify`).
+  that does not exist in the fixture, or cites a file/line locator that
+  doesn't match the actual location of the evidence.
+- **Unlabeled speculation:** A finding presents an unverified claim with a
+  status of `Protected` or `Unprotected` and `High` evidence confidence
+  when the fixture provides no such direct evidence (should be `Unknown`
+  status, or a lower evidence confidence with the gap named).
+- **Status/confidence conflation:** A finding uses a single word (e.g.
+  "Verified") to describe both whether a safeguard exists and how solid
+  the evidence is, instead of reporting Status and Evidence confidence
+  as two separate labels.
 - **Generic filler:** A finding is vague enough to apply to almost any
   code change (e.g. "consider edge cases," "add more tests" with no
   specific evidence or test).

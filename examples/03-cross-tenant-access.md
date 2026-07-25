@@ -3,9 +3,10 @@
 ## Input diff (summary)
 
 ```ts
-app.get("/invoices/:id", async (req, res) => {
-  const invoice = await db.invoice.findUnique({
-    where: { id: req.params.id },
+// src/routes/invoices.ts
+app.get("/invoices/:id", async (req, res) => {   // line 4
+  const invoice = await db.invoice.findUnique({  // line 5
+    where: { id: req.params.id },                // line 6
   });
 
   res.json(invoice);
@@ -31,19 +32,21 @@ The route requires authentication but the database query fetches an
 invoice by ID alone, with no tenant or ownership filter in the query
 itself. Whether tenant isolation is enforced elsewhere (middleware,
 row-level security) could not be confirmed from the reviewed scope. This
-is flagged P0-severity but Likely-confidence: if verification shows no
-scoping exists elsewhere, it becomes a confirmed release blocker.
+is flagged P0-priority with a Partially protected status: authentication
+exists, but that only confirms identity, not tenant scoping, and the gap
+becomes a confirmed release blocker if verification finds no scoping
+elsewhere.
 
 ## Ledger
 
-| Priority | Assumption | Evidence | If false | Current protection | Falsification test | Recommended action | Confidence |
+| Priority | Assumption | Evidence | If false | Status | Falsification test | Recommended action | Evidence confidence |
 |---|---|---|---|---|---|---|---|
-| P0 | The authenticated caller can only ever receive invoices belonging to their own tenant. | `findUnique({ where: { id } })` filters only by primary key; no `organizationId`/`tenantId` clause is present in this query. | An authenticated user from tenant A can read tenant B's invoice by guessing or enumerating IDs. | Route requires authentication, but authentication is not the same as authorization/tenant scoping. | Authenticate as tenant A, request an invoice ID known to belong to tenant B, and confirm the response is empty or forbidden. | Add an explicit tenant filter to the query, or confirm and document row-level security enforcing it at the database layer. | Likely |
+| P0 | The authenticated caller can only ever receive invoices belonging to their own tenant. | `src/routes/invoices.ts:5-6` — `findUnique({ where: { id } })` filters only by primary key; no `organizationId`/`tenantId` clause is present in this query. | An authenticated user from tenant A can read tenant B's invoice by guessing or enumerating IDs. | Partially protected — the route requires authentication (identity is checked), but no tenant/ownership filter was found in this query, and whether row-level security enforces it elsewhere in the stack was not inspected. | Authenticate as tenant A, request an invoice ID known to belong to tenant B, and confirm the response is empty or forbidden. | Add an explicit tenant filter to the query, or confirm and document row-level security enforcing it at the database layer. | High |
 
 ## Existing safeguards
 
-- The route is registered behind authentication middleware (confirms
-  identity, not tenant scope).
+- The route is registered behind authentication middleware at the router
+  level (confirms identity, not tenant scope).
 
 ## Required verification before release
 

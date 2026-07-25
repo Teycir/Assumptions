@@ -16,13 +16,13 @@ Identify the conditions a change silently depends on in order to work safely
 in production.
 
 Produce a structured ledger of:
-- hidden assumptions
-- repository evidence
+- hidden assumptions, phrased as conditions that must hold
+- repository evidence, with a file and line locator where available
 - failure modes
 - existing safeguards
 - falsification tests
 - recommended controls
-- confidence and priority
+- status, evidence confidence, and priority
 
 This is not a generic code review. Do not report vague concerns.
 
@@ -30,17 +30,78 @@ This is not a generic code review. Do not report vague concerns.
 
 Only report an assumption when you can provide all of the following:
 
-1. The assumption stated as a falsifiable condition.
+1. The assumption stated as a falsifiable condition (what must hold, not
+   what the current code does — see "Phrasing assumptions as conditions"
+   below).
 2. Direct evidence from code, tests, configuration, schema, documentation,
-   or the Git diff.
+   or the Git diff, with a file path and line range when the tooling
+   available can produce one. If a line range is unavailable, cite the
+   file path and the symbol (function, route, migration file) instead.
+   Never present a claim as repository evidence without a locator.
 3. A concrete consequence if the assumption is false.
-4. Existing safeguards, or an explicit statement that none were found.
+4. Existing safeguards, or an explicit statement that none were found. A
+   "none found" statement must name the scope that was searched (files,
+   directories, or symbols) — see "Search boundary for absence claims"
+   below. Do not write "none found" without saying where you looked.
 5. A practical falsification test or verification step.
-6. A confidence label: Verified, Likely, or Unknown.
-7. A priority: P0, P1, P2, or P3.
+6. A status label: Protected, Partially protected, Unprotected, or Unknown
+   (see "Status vs. evidence confidence" below).
+7. An evidence confidence label: High, Medium, or Low.
+8. A priority: P0, P1, P2, or P3.
 
-If evidence is insufficient, write it as an `Unknown` or
-`Assumption to verify`, not as a defect.
+### Status vs. evidence confidence
+
+These are two different questions and must not be collapsed into one label.
+
+- **Status** answers: *does the repository protect against this condition
+  failing?* Values: `Protected` (a safeguard was found and it appears to
+  fully address the risk), `Partially protected` (a safeguard exists but
+  has a gap), `Unprotected` (no safeguard was found in the searched
+  scope), `Unknown` (the reviewed scope doesn't contain enough
+  information to tell).
+- **Evidence confidence** answers: *how solid is the evidence behind that
+  status call?* Values: `High` (direct, unambiguous code/config/test
+  evidence), `Medium` (reasonable inference from related code, but not a
+  direct observation of the behavior in question), `Low` (thin or
+  indirect evidence; flag this rather than rounding up to Medium).
+
+Do not label a status `Protected` or `Unprotected` as "Verified" — that
+conflates whether a safeguard exists with whether the underlying
+production behavior (e.g. "the gateway never retries") is actually
+guaranteed. A status can have High evidence confidence while the broader
+real-world claim it implies is still not fully knowable from the repo
+alone; say so in "Unknowns and boundaries" rather than overstating the
+status label.
+
+### Phrasing assumptions as conditions
+
+Phrase each assumption as the condition that must hold, not as a
+description of what the current code appears to do. This keeps the
+Assumption column stable even as Status changes across reviews.
+
+| Weaker phrasing (avoid) | Stronger phrasing (use) |
+|---|---|
+| "Refund processing is idempotent per request." | "Duplicate refund requests are prevented or safely deduplicated." |
+| "The migration fully completes before any worker runs." | "New worker code remains safe before, during, and after the schema transition." |
+| "The client can always tell whether the refund succeeded." | "A caller can reliably determine the outcome after a response interruption." |
+
+### Search boundary for absence claims
+
+"None found" is only meaningful if it states where the search happened.
+Write it as:
+
+```
+None found in src/refunds/, db/schema.sql, and tests/refunds/retry.test.ts;
+queue configuration was not inspected.
+```
+
+not as a bare "None found." An unqualified absence claim reads as
+complete when it may only reflect a partial search.
+
+If evidence is insufficient to call a status `Protected` or `Unprotected`,
+use `Unknown` and pair it with a concrete verification step rather than
+guessing. An `Unknown` status is not a defect — it is a task for someone
+with runtime or operational knowledge the repository doesn't contain.
 
 ## Investigation procedure
 
@@ -57,6 +118,22 @@ If evidence is insufficient, write it as an `Unknown` or
      subset (new endpoints, migrations, auth/payment code, concurrency-
      sensitive paths) and state explicitly which files were excluded and
      why, so the user can request a follow-up pass on the rest.
+   - **Two-stage output for oversized scope:** before producing the
+     ledger, output a short review plan naming the high-risk paths
+     selected for this pass and the paths excluded, e.g.:
+     ```
+     ## Review plan
+
+     High-risk paths selected:
+     - New payment endpoint
+     - Migration
+
+     Excluded for this pass:
+     - UI-only files
+     - Generated client files
+     ```
+     Then produce the ledger for the selected paths only. This makes the
+     scoping decision visible before any conclusions are drawn from it.
 
 2. Map the changed behavior.
    - Identify entry points, callers, data reads/writes, side effects, external
@@ -99,7 +176,7 @@ If evidence is insufficient, write it as an `Unknown` or
    - P3: low-impact observation or weak-evidence hypothesis.
 
 6. Produce the ledger.
-   - Prioritize high-confidence, high-impact findings.
+   - Prioritize high-evidence-confidence, high-impact findings.
    - Include no more than 10 entries by default.
    - If more than 10 valid findings exist, keep all P0 and P1 findings
      first (never drop a P0 to make room for a lower-priority item), then
@@ -131,8 +208,13 @@ and recommended immediate action.>
 
 ## Ledger
 
-| Priority | Assumption | Evidence | If false | Current protection | Falsification test | Recommended action | Confidence |
+| Priority | Assumption | Evidence | If false | Status | Falsification test | Recommended action | Evidence confidence |
 |---|---|---|---|---|---|---|---|
+
+Evidence must include a file path and line range when available (or file
+path and symbol if a line range can't be produced). Status must be one of
+Protected / Partially protected / Unprotected / Unknown, and must state
+the search scope when reporting no safeguard was found.
 
 ## Existing safeguards
 
@@ -150,17 +232,33 @@ and recommended immediate action.>
 
 ## Terminology
 
-- **Verified:** Directly established by repository evidence.
-- **Likely:** Strong inference from code; runtime behavior is not fully known.
-- **Unknown:** Cannot be determined from available evidence.
-- **Assumption to verify:** The condition is meaningful and plausible but
-  evidence is too thin to call it Likely or Verified. Use this instead of
-  guessing a confidence level, and pair it with a concrete verification
-  step rather than a falsification test if no test can settle it.
 - **Assumption:** A condition that must hold for the behavior to be safe or
-  correct.
+  correct, phrased as the condition itself (see "Phrasing assumptions as
+  conditions" above) — not as a description of what the code currently
+  appears to do.
+- **Status — Protected:** A safeguard was found in the searched scope and
+  it appears to fully address the risk.
+- **Status — Partially protected:** A safeguard exists but has an
+  identifiable gap (e.g. covers one call site but not another).
+- **Status — Unprotected:** No safeguard was found within the stated
+  search scope.
+- **Status — Unknown:** The reviewed scope doesn't contain enough
+  information to assign Protected, Partially protected, or Unprotected.
+  Pair this with a concrete verification step, not a guess.
+- **Evidence confidence — High:** Direct, unambiguous evidence from code,
+  tests, schema, or config.
+- **Evidence confidence — Medium:** Reasonable inference from related
+  code, without directly observing the behavior in question.
+- **Evidence confidence — Low:** Thin or indirect evidence. Flag it as Low
+  rather than rounding up.
 - **Falsification test:** A test or procedure designed to show whether the
   assumption fails.
+
+Status and evidence confidence are independent: a `Protected` status can
+carry `Low` evidence confidence if the safeguard was only inferred, not
+directly observed. Never substitute one label for the other, and never use
+"Verified" as a stand-in for either — it conflates whether a safeguard
+exists with whether the broader real-world claim is guaranteed.
 
 ## What this skill must not do
 
@@ -189,8 +287,15 @@ and recommended immediate action.>
 Category tags match the ones used in step 3 of the Investigation
 procedure. A mode restricts which categories are investigated; it does
 not change the Core standard — every reported finding still needs
-evidence, a consequence, a falsification test or verification step, a
-confidence label, and a priority.
+evidence with a locator, a consequence, a falsification test or
+verification step, a status label, an evidence confidence label, and a
+priority.
+
+The `/assumptions-scan ...` notation above names the mode, not a
+registered slash command — whether it becomes an actual slash command
+depends on the host. Treat it as shorthand for "invoke Assumptions in
+this mode," e.g. "Use Assumptions in deploy mode for this migration" and
+`/assumptions-scan --deploy` refer to the same request.
 
 ### `--tests` output format
 
@@ -204,8 +309,8 @@ output only:
 **Proves:** <what a pass/fail result tells you>
 ```
 
-Order findings P0 first. Omit Evidence, Current protection, and
-Recommended action — those belong in the full ledger, not this mode.
+Order findings P0 first. Omit Evidence, Status, and Recommended action —
+those belong in the full ledger, not this mode.
 
 ### `--compact` output format
 

@@ -3,12 +3,13 @@
 ## Input diff (summary)
 
 ```ts
-app.post("/webhooks/subscription", async (req, res) => {
+// src/webhooks/subscription.ts
+app.post("/webhooks/subscription", async (req, res) => {  // line 2
   const event = req.body;
 
-  await db.subscription.update({
+  await db.subscription.update({                          // line 6
     where: { id: event.subscriptionId },
-    data: { status: event.status },
+    data: { status: event.status },                        // line 8
   });
 
   res.sendStatus(200);
@@ -36,15 +37,16 @@ after a newer one could overwrite current state with outdated data.
 
 ## Ledger
 
-| Priority | Assumption | Evidence | If false | Current protection | Falsification test | Recommended action | Confidence |
+| Priority | Assumption | Evidence | If false | Status | Falsification test | Recommended action | Evidence confidence |
 |---|---|---|---|---|---|---|---|
-| P1 | Webhook events for a given subscription always arrive in the order they were generated. | The handler applies `event.status` directly with no comparison against a stored event timestamp or version. | A delayed or redelivered older event can overwrite a newer subscription status, reverting state incorrectly. | None found. | Send two events out of order (newer first, older second) and confirm the final stored status matches the newer event. | Store and compare an event timestamp or monotonic version before applying the update; ignore older events. | Likely |
-| P2 | The webhook provider will not redeliver the same event more than once in a way that matters. | No idempotency key or event-ID deduplication is present in the handler. | A redelivered duplicate event re-applies the same status; likely harmless here since the write is idempotent by value, but worth confirming. | The update itself is idempotent for identical repeated events. | Send the identical event twice and confirm no unintended side effects (e.g. duplicate notifications) occur elsewhere in the flow. | Track processed event IDs if any non-idempotent side effect (email, billing action) is later added to this handler. | Assumption to verify |
+| P1 | Webhook events for a given subscription are applied in the order they were generated, regardless of delivery order. | `src/webhooks/subscription.ts:6-8` — the handler applies `event.status` directly with no comparison against a stored event timestamp or version. | A delayed or redelivered older event can overwrite a newer subscription status, reverting state incorrectly. | Unprotected — no timestamp or version check found in `src/webhooks/subscription.ts`. | Send two events out of order (newer first, older second) and confirm the final stored status matches the newer event. | Store and compare an event timestamp or monotonic version before applying the update; ignore older events. | High |
+| P2 | A redelivered duplicate event does not cause an unintended side effect. | `src/webhooks/subscription.ts:6-8` — no idempotency key or event-ID deduplication is present; the update writes `event.status` directly, which is idempotent for identical repeated values. | If a non-idempotent side effect (email, billing action) is added to this handler later without dedup, a redelivered event would trigger it twice. | Partially protected — the current write is idempotent by value, but no event-ID deduplication exists, so this only holds as long as no non-idempotent effect is added. | Send the identical event twice and confirm no unintended side effects (e.g. duplicate notifications) occur elsewhere in the flow. | Track processed event IDs now, before any non-idempotent side effect is added to this handler. | Medium |
 
 ## Existing safeguards
 
 - The core update operation is naturally idempotent for identical repeated
-  events (same status written twice has no additional effect).
+  events (same status written twice has no additional effect), based on
+  `src/webhooks/subscription.ts:6-8`.
 
 ## Required verification before release
 

@@ -24,7 +24,7 @@
       "input_files": ["invoices.ts"],
       "expected_findings_file": "EXPECTED_FINDINGS.md",
       "must_hit_priorities": ["P0"],
-      "notes": "Checks that the model does not overclaim confidence about protections it cannot see (middleware, RLS)."
+      "notes": "Checks that the model does not overclaim status about protections it cannot see (middleware, RLS) — the system-wide question should be Unknown, not a confident Protected or Unprotected."
     },
     {
       "id": "queue-redelivery",
@@ -32,7 +32,7 @@
       "input_files": ["worker.ts"],
       "expected_findings_file": "EXPECTED_FINDINGS.md",
       "must_hit_priorities": ["P0"],
-      "notes": "Checks correct confidence calibration: at-least-once delivery should be Likely/Unknown, not asserted as Verified, unless the queue technology is confirmed."
+      "notes": "Checks correct evidence-confidence calibration: at-least-once delivery behavior should carry Medium/Low evidence confidence (or an Unknown status), not be asserted as High confidence, unless the queue technology's delivery semantics are confirmed."
     }
   ]
 }

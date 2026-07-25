@@ -19,7 +19,7 @@ sample with a documented list of expected findings. A good fixture:
 - Is small enough to read in full (under ~50 lines of source).
 - Contains one or two clear, provable hidden assumptions.
 - Includes an `EXPECTED_FINDINGS.md` describing what the skill should
-  surface, including priority and confidence.
+  surface, including priority, status, and evidence confidence.
 
 Existing fixtures are deliberately written as minimal pseudo-code: names
 like `app`, `db`, `req`, `Job`, or `ExportRow` are used without imports or
@@ -51,7 +51,7 @@ findings missed) are especially valuable.
   something literally present in the sample code, not an imagined business
   rule.
 - Do not add findings just because they sound plausible. If evidence is
-  weak, the correct label is `Unknown` or `Assumption to verify`, not a
-  confident defect.
+  weak, the correct status is `Unknown`, not a confident `Protected` or
+  `Unprotected` call.
 - Keep additions self-contained. Avoid growing `SKILL.md` itself unless the
   change improves precision for a wide range of cases.

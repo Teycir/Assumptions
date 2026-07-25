@@ -3,12 +3,13 @@
 ## Input diff (summary)
 
 ```ts
+// src/auth/roles.ts
 async function getUserRoles(userId: string) {
   const cached = await redis.get(`roles:${userId}`);
   if (cached) return JSON.parse(cached);
 
   const roles = await db.role.findMany({ where: { userId } });
-  await redis.set(`roles:${userId}`, JSON.stringify(roles), "EX", 3600);
+  await redis.set(`roles:${userId}`, JSON.stringify(roles), "EX", 3600);  // line 7
   return roles;
 }
 ```
@@ -34,13 +35,13 @@ rather than a correctness one.
 
 ## Ledger
 
-| Priority | Assumption | Evidence | If false | Current protection | Falsification test | Recommended action | Confidence |
+| Priority | Assumption | Evidence | If false | Status | Falsification test | Recommended action | Evidence confidence |
 |---|---|---|---|---|---|---|---|
-| P1 | A user's cached roles are acceptable to serve for up to one hour after a permission change. | `redis.set(..., "EX", 3600)` sets a 1-hour TTL; no `redis.del` call was found anywhere roles are modified. | An admin revokes a user's access, but the user retains the old, cached permissions for up to an hour. | TTL bounds the exposure window to at most one hour. | Grant a role, cache it, then revoke it directly in the database and confirm the cached response still reflects the old role before TTL expiry. | Invalidate (`DEL`) the cache key at every point roles are created, updated, or removed. | Verified |
+| P1 | A revoked or changed role takes effect for a user within an acceptable window, not just at cache expiry. | `src/auth/roles.ts:7` — `redis.set(..., "EX", 3600)` sets a 1-hour TTL; no `redis.del` call was found anywhere roles are modified in the reviewed scope. | An admin revokes a user's access, but the user retains the old, cached permissions for up to an hour. | Partially protected — the TTL bounds the exposure window to at most one hour, but no active invalidation exists at role-mutation sites. | Grant a role, cache it, then revoke it directly in the database and confirm the cached response still reflects the old role before TTL expiry. | Invalidate (`DEL`) the cache key at every point roles are created, updated, or removed. | High |
 
 ## Existing safeguards
 
-- A 1-hour TTL bounds the maximum staleness window.
+- A 1-hour TTL at `src/auth/roles.ts:7` bounds the maximum staleness window.
 
 ## Required verification before release
 

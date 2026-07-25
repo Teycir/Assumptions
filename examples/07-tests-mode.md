@@ -44,9 +44,9 @@ pass/fail test result.
 ## Why this is a good `--tests` example
 
 - Findings are ordered P0 first, matching the mode's required order.
-- Evidence, Current protection, and Recommended action are omitted, as
-  specified for this mode — only the assumption, the test, and what the
-  test proves are shown.
+- Evidence, Status, and Recommended action are omitted, as specified for
+  this mode — only the assumption, the test, and what the test proves are
+  shown.
 - The P2 finding has no meaningful test (it's a process gap), so the
   format is used honestly: `Falsification test: N/A` with a verification
   step offered instead, rather than inventing a fake test to fit the

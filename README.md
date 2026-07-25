@@ -12,9 +12,11 @@
 
 **Find what your code assumes before production proves it wrong.**
 
-One command turns a diff into a reviewable table: every hidden assumption,
-the evidence behind it, what breaks if it's wrong, and the test that proves
-it one way or the other — in about the time it takes to read the PR.
+One invocation turns a diff into a reviewable table: every hidden
+assumption, the evidence behind it, what breaks if it's wrong, and the
+test that proves it one way or the other. It scopes its review,
+prioritizes the highest-risk paths, and states what it could not inspect
+— rather than promising to cover everything in a fixed amount of time.
 
 Most production failures are not caused by obviously broken code.
 
@@ -33,13 +35,13 @@ Assumptions asks one question:
 
 It then produces a reviewable artifact:
 
-- the assumption
-- evidence in the repository
+- the assumption, phrased as a condition
+- evidence in the repository, with a file/line locator where available
 - what breaks if it is false
-- safeguards already present
+- a status (Protected / Partially protected / Unprotected / Unknown)
 - a test or procedure to falsify it
 - a recommended control
-- confidence and release priority
+- an evidence confidence label and a release priority
 
 ---
 
@@ -51,10 +53,10 @@ to act on — and there's no standard forcing it to show its work.
 
 | | Generic "review this" prompt | Assumptions |
 | :--- | :--- | :--- |
-| **Output shape** | Prose, varies every run | Fixed table: Assumption, Evidence, If false, Protection, Falsification test, Action, Confidence |
-| **Evidence** | Often asserted, not shown | Required — every entry cites the exact repository evidence, or is downgraded to `Unknown` |
+| **Output shape** | Prose, varies every run | Fixed table: Assumption, Evidence, If false, Status, Falsification test, Action, Evidence confidence |
+| **Evidence** | Often asserted, not shown | Required — every entry cites the exact repository evidence with a file/line locator, or the status is downgraded to `Unknown` |
 | **Severity** | "This seems risky" | Explicit P0–P3 priority, argued from consequence, not tone |
-| **Confidence** | Implied by wording | Explicit label: Verified / Likely / Unknown / Assumption to verify |
+| **Protection vs. certainty** | Conflated into one impression | Two separate labels: **Status** (Protected / Partially protected / Unprotected / Unknown) and **Evidence confidence** (High / Medium / Low) |
 | **Actionability** | You still have to invent a test | Every finding ships with a concrete falsification test or verification step |
 | **False positives** | Generic "edge case" lists pad the output | Nothing is reported without evidence — an unclear case is labeled `Unknown`, not flagged as a bug |
 | **Consistency across reviewers** | Depends on how the prompt was phrased | Same ledger format every time, so PRs are comparable across the team |
@@ -76,7 +78,7 @@ format that's fast to review and hard to hand-wave through. See the
 | **Preparing a release / writing the PR description** | The PR description says "tested locally," with no structured list of what could still break in production | `/assumptions-scan --compact` produces a short, PR-ready table of P0/P1 risks the reviewer can act on directly |
 | **Turning a risk into a regression test** | Someone identifies a risk in review, but writing the actual test is left as a follow-up that often never happens | `/assumptions-scan --tests` outputs ready-to-write falsification tests for every finding, ordered by priority |
 | **Onboarding to an unfamiliar codebase or diff** | A large or unfamiliar diff gets a shallow pass because there's too much to hold in your head at once | The skill's oversized-scope handling picks the highest-risk subset (auth, payments, migrations, concurrency-sensitive paths) and explicitly states what was excluded |
-| **Deciding whether a concern is worth blocking on** | Findings get flagged as "critical" based on gut feel, or dismissed as "probably fine" with no real justification | Every finding carries an explicit confidence label (Verified / Likely / Unknown / Assumption to verify) and priority (P0–P3), so severity is argued from evidence, not vibes |
+| **Deciding whether a concern is worth blocking on** | Findings get flagged as "critical" based on gut feel, or dismissed as "probably fine" with no real justification | Every finding carries an explicit status (Protected / Partially protected / Unprotected / Unknown), an evidence confidence label (High / Medium / Low), and a priority (P0–P3), so severity is argued from evidence, not vibes |
 
 ---
 
@@ -87,9 +89,11 @@ format that's fast to review and hard to hand-wave through. See the
   - [🎯 Use Cases](#-use-cases)
   - [📑 Table of Contents](#-table-of-contents)
   - [Example](#example)
+    - [Example ledgers](#example-ledgers)
   - [Installation](#installation)
   - [Usage](#usage)
   - [What this is not](#what-this-is-not)
+  - [Limits](#limits)
   - [Repository layout](#repository-layout)
   - [Privacy and cost](#privacy-and-cost)
   - [Contributing](#contributing)
@@ -106,15 +110,29 @@ format that's fast to review and hard to hand-wave through. See the
 ## Example
 
 ```
-/assumptions-scan
+Use Assumptions to review the current diff.
 ```
 
 ```
-| Priority | Assumption | If false | Falsification test |
-|---|---|---|---|
-| P0 | A payment request is processed once. | A retry charges the customer twice. | Replay the same request concurrently. |
-| P1 | New workers never see the old schema. | Rolling deploy causes worker failures. | Run new code against the old schema. |
+| Priority | Assumption | If false | Status | Falsification test |
+|---|---|---|---|---|
+| P0 | Duplicate payment requests are prevented or safely deduplicated. | A retry charges the customer twice. | Unprotected | Replay the same request concurrently; assert one charge. |
+| P1 | New worker code remains safe before, during, and after the schema transition. | Rolling deploy causes worker failures. | Unprotected | Run new code against the old schema. |
 ```
+
+See [`examples/`](examples/) for full ledgers with evidence locators,
+evidence confidence, and recommended actions — the table above is
+trimmed for a quick preview.
+
+### Example ledgers
+
+- [Duplicate payment after retry](examples/01-duplicate-payment.md)
+- [Unsafe schema migration](examples/02-unsafe-migration.md)
+- [Cross-tenant access](examples/03-cross-tenant-access.md)
+- [Webhook ordering assumption](examples/04-webhook-ordering.md)
+- [Cache-staleness assumption](examples/05-cache-staleness.md)
+- [Compact PR mode](examples/06-compact-mode.md)
+- [Falsification-tests mode](examples/07-tests-mode.md)
 
 ## Installation
 
@@ -140,22 +158,42 @@ Replace `/path/to/Assumptions` with wherever you cloned this repository
 from this repo's file view and save it to that path).
 
 **Any other agent:** clone or download this repository and point your
-agent's skill/instruction configuration at `SKILL.md`. It's written to
-work with any agent that can read a `SKILL.md`-style instruction file and
-inspect a local Git repository — Claude Code is the reference target, but
-nothing here is Claude Code-specific.
+agent's skill/instruction configuration at `SKILL.md`. "Agent-agnostic"
+here means the instructions are portable Markdown with no vendor-specific
+syntax — not that every agent auto-discovers or auto-invokes it the same
+way. Claude Code is the reference integration; other agents can use it
+when they support a compatible skill/instruction file and have permission
+to inspect the local repository.
 
-Verify it's picked up:
+Verify it's picked up — ask your agent, in plain language:
 
-```bash
-/assumptions-scan
 ```
+Use Assumptions to review the current diff.
+```
+
+Some hosts also expose installed skills as a slash command or a skill
+picker; if yours does, it may respond to `/assumptions-scan` as well.
+Either form works — see [Usage](#usage) below.
 
 If your agent doesn't auto-discover skills, paste the contents of
 `SKILL.md` directly into a system prompt or custom instructions field —
 it's a self-contained Markdown document.
 
 ## Usage
+
+`/assumptions-scan ...` below names the mode you're invoking, not a
+guaranteed slash command — whether it becomes a real slash command
+depends on your agent host. Both forms below invoke the same thing:
+
+```
+Use Assumptions to review the current diff.
+Use Assumptions to review src/billing/create-refund.ts.
+Use Assumptions in deploy mode: "Add a nullable organization_id column, backfill it, then require it."
+Use Assumptions in concurrency mode: "Can two people redeem the same invite?"
+Use Assumptions in failure mode: "What happens if Stripe times out after charging the customer?"
+Use Assumptions to produce falsification tests for src/billing/create-refund.ts.
+Use Assumptions in compact mode for the current diff.
+```
 
 ```
 /assumptions-scan
@@ -167,7 +205,9 @@ it's a self-contained Markdown document.
 /assumptions-scan --compact
 ```
 
-See `SKILL.md` for the full list of modes and the required output format.
+If your host does register `/assumptions-scan` as a slash command, use
+it — both forms produce the same investigation and output. See
+`SKILL.md` for the full list of modes and the required output format.
 
 ## What this is not
 
@@ -178,6 +218,19 @@ See `SKILL.md` for the full list of modes and the required output format.
 
 Every finding should be grounded in repository evidence and include a way to
 prove, protect, or falsify the underlying assumption.
+
+## Limits
+
+Assumptions analyzes the evidence available in the repository your agent
+can inspect. It cannot verify undocumented production behavior — gateway
+retry policies, queue delivery semantics, exact deployment ordering, or a
+provider's actual guarantees — unless that behavior is captured in
+repository code, tests, configuration, or documentation.
+
+Treat every `Unknown` status as a verification task, not a confirmed
+defect and not a confirmed absence of risk. If a finding matters and its
+status is `Unknown`, resolve it against your actual infrastructure before
+relying on the ledger's `Overall risk` line alone.
 
 ## Repository layout
 

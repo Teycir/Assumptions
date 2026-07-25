@@ -32,5 +32,5 @@ the full ledger.
   nothing here is invented to fit the shorter format.
 - Only P0/P1 rows are shown; the fixture's P2 finding ("no reconciliation
   or observability path") is summarized as a count, not dropped silently.
-- No Evidence, Current protection, or Recommended action columns — those
-  belong in the full ledger.
+- No Evidence, Status, or Recommended action columns — those belong in
+  the full ledger.
