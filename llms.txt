@@ -1,0 +1,63 @@
+# Assumptions
+
+> A portable agent skill that turns a Git diff into an evidence-backed
+> Assumption Ledger: the conditions a change silently depends on, the
+> repository evidence for each, what breaks if it's wrong, and a
+> falsification test to settle the question.
+
+Assumptions is a single self-contained Markdown file (`SKILL.md`) — no
+build step, no dependencies, no account, no hosted backend. It works with
+any coding agent that can read a skill/instruction file and inspect a
+local repository. Claude Code is the reference integration.
+
+## Invoke it
+
+Say or send this to an agent that has the skill installed:
+
+    Use Assumptions to review the current diff.
+
+If the host registers slash commands, `/assumptions-scan` invokes the
+same procedure. See [Usage](README.md#usage) for all modes
+(`--deploy`, `--concurrency`, `--failure`, `--tests`, `--compact`).
+
+## Install
+
+    mkdir -p .claude/skills/assumptions
+    cp SKILL.md .claude/skills/assumptions/SKILL.md
+
+For non-Claude-Code hosts, point the agent's skill/instruction config at
+`SKILL.md` directly, or paste its contents into a system prompt. Full
+instructions: [Installation](README.md#installation).
+
+## Core files
+
+- [SKILL.md](SKILL.md): the entire skill definition — output contract,
+  investigation procedure, and phrasing rules. This is the file to read
+  or copy; everything else in the repo supports or documents it.
+- [AGENTS.md](AGENTS.md): host-neutral repo convention for when to
+  auto-invoke the skill before a commit.
+- [CLAUDE.md](CLAUDE.md): the same convention, Claude Code-specific.
+- [README.md](README.md): full documentation — how it works, use cases,
+  benchmarks, and limits.
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to add examples, fixtures, or
+  eval cases.
+
+## Example output
+
+- [examples/](examples/): full sample ledgers (duplicate payment,
+  unsafe migration, cross-tenant access, webhook ordering, cache
+  staleness, compact mode, falsification-tests mode).
+- [fixtures/](fixtures/): small repos with known, documented hidden
+  assumptions, used to benchmark the skill.
+- [evals/](evals/): benchmark methodology, baseline history, and grading
+  rubric — see [evals/BASELINE.md](evals/BASELINE.md) for recall/
+  precision results across versions.
+
+## Scope
+
+Assumptions is not a generic AI code reviewer, not a static analyzer,
+and not an autonomous code modifier. It only reports an assumption when
+it can cite direct repository evidence with a file/line locator;
+otherwise the status is `Unknown`, not a guess. See
+[Limits](README.md#limits) for what it cannot verify (undocumented
+production behavior, provider guarantees, deployment infrastructure).

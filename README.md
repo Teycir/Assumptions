@@ -72,8 +72,29 @@ It then produces a reviewable artifact:
 
 ---
 
+## ⚡ Quick start
+
+```bash
+mkdir -p .claude/skills/assumptions
+cp SKILL.md .claude/skills/assumptions/SKILL.md
+```
+
+Then, in any agent session:
+
+```
+Use Assumptions to review the current diff.
+```
+
+That's the whole install and the whole invocation. See
+[Installation](#installation) for other hosts and
+[Usage](#usage) for the other modes (`--deploy`, `--concurrency`,
+`--failure`, `--tests`, `--compact`).
+
+---
+
 ## 📑 Table of Contents
 
+- [Quick start](#-quick-start)
 - [How It Works](#how-it-works)
 - [Why not just ask your AI assistant?](#why-not-just-ask-your-ai-assistant-to-review-this)
 - [Use Cases](#use-cases)
@@ -365,6 +386,7 @@ Assumptions/
 ├── SKILL.md          Core skill definition and output contract
 ├── CLAUDE.md          Repo convention: when to run the skill (Claude Code)
 ├── AGENTS.md          Same convention, host-neutral phrasing
+├── llms.txt           Map of this repo for LLM agents (llms.txt convention)
 ├── README.md         This file
 ├── LICENSE            MIT license
 ├── CONTRIBUTING.md    How to add examples, fixtures, and eval cases
