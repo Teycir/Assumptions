@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080A0F"/>
+      <stop offset="100%" stop-color="#161B22"/>
+    </linearGradient>
+    <linearGradient id="text-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#58A6FF"/>
+      <stop offset="100%" stop-color="#3FB950"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Container Box -->
+  <rect width="900" height="240" rx="16" fill="url(#bg-grad)" stroke="#30363D" stroke-width="2"/>
+
+  <!-- Window Dots -->
+  <circle cx="30" cy="24" r="6" fill="#FF5F56"/>
+  <circle cx="50" cy="24" r="6" fill="#FFBD2E"/>
+  <circle cx="70" cy="24" r="6" fill="#27C93F"/>
+  <text x="96" y="28" fill="#8B949E" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="12" font-weight="600">assumptions --scan .</text>
+
+  <!-- Divider -->
+  <line x1="0" y1="44" x2="900" y2="44" stroke="#21262D" stroke-width="1"/>
+
+  <!-- ASCII / Cyber Text -->
+  <g filter="url(#glow)">
+    <text x="450" y="130" text-anchor="middle" fill="url(#text-grad)" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="54" font-weight="900" letter-spacing="4">ASSUMPTIONS</text>
+  </g>
+
+  <!-- Subtitle Tagline -->
+  <text x="450" y="175" text-anchor="middle" fill="#8B949E" font-family="'Inter', -apple-system, sans-serif" font-size="18" font-weight="500" letter-spacing="0.5">Find what your code assumes before production proves it wrong.</text>
+
+  <!-- Terminal Command Badge -->
+  <rect x="330" y="195" width="240" height="30" rx="15" fill="#0D1117" stroke="#30363D"/>
+  <text x="450" y="215" text-anchor="middle" fill="#58A6FF" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="700">⚡ /assumptions-scan</text>
+</svg>

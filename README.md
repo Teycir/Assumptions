@@ -1,17 +1,10 @@
-<h1 align="center">
-  <br>
-  <pre>
-    ___   __________ __  ____  _______  ______________  _   _______
-   /   | / ___/ ___// / / /  |/  / __ \/_  __/  _/ __ \/ | / / ___/
-  / /| | \__ \\__ \/ / / / /|_/ / /_/ / / /  / // / / /  |/ /\__ \ 
- / ___ |___/ /__/ / /_/ / /  / / ____/ / / _/ // /_/ / /|  /___/ / 
-/_/  |_/____/____/\____/_/  /_/_/     /_/ /___/\____/_/ |_//____/  
-  </pre>
-  Assumptions
-  <br>
-</h1>
+<div align="center">
+  <a href="https://github.com/Teycir/Assumptions">
+    <img src="assets/banner.svg" alt="Assumptions Header" width="100%">
+  </a>
+</div>
 
-<h4 align="center">Find what your code assumes before production proves it wrong.</h4>
+<br>
 
 <p align="center">
   <a href="#-use-cases">Features</a> •
