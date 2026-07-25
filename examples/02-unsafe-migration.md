@@ -17,7 +17,7 @@ value is set on the column, and no backfill step is present.
 ## Output ledger
 
 ```
-# Assumption Ledger: Add required "format" column to exports
+# Assumptions: Add required "format" column to exports
 
 **Scope:** migrations/2026_07_add_format.sql, src/workers/worker.ts
 **Overall risk:** High

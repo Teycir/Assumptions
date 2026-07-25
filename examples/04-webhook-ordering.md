@@ -21,7 +21,7 @@ sequence check. No test simulates out-of-order delivery.
 ## Output ledger
 
 ```
-# Assumption Ledger: Handle subscription webhook events
+# Assumptions: Handle subscription webhook events
 
 **Scope:** src/webhooks/subscription.ts
 **Overall risk:** Medium

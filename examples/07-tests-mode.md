@@ -3,7 +3,7 @@
 ## Input
 
 ```
-/assumptions --tests
+/assumptions-scan --tests
 ```
 
 Run against `fixtures/duplicate-checkout/checkout.ts` (see

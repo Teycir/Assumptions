@@ -1,14 +1,14 @@
 ---
-name: assumption-ledger
+name: assumptions
 description: >
-  Generate an evidence-backed Assumption Ledger for a Git diff, feature,
+  Generate an evidence-backed Assumptions ledger for a Git diff, feature,
   endpoint, worker, migration, or code path. Use when reviewing a change,
   asking what could break, preparing a release, finding edge cases, assessing
   deployment safety, analyzing retries or concurrency, or designing
   failure-focused tests.
 ---
 
-# Assumption Ledger
+# Assumptions
 
 ## Purpose
 
@@ -118,7 +118,7 @@ If evidence is insufficient, write it as an `Unknown` or
 ## Required output format
 
 ```
-# Assumption Ledger: <scope>
+# Assumptions: <scope>
 
 **Scope:** <files, branch comparison, symbol, or feature analyzed>
 **Overall risk:** <Low | Medium | High>
@@ -177,14 +177,14 @@ and recommended immediate action.>
 
 | Command | Purpose | Categories in scope |
 |---|---|---|
-| `/assumptions` | Analyze the current diff or requested scope. | All |
-| `/assumptions <file or symbol>` | Analyze one code path, module, endpoint, worker, or function. | All |
-| `/assumptions --deploy` | Focus on migrations, rollouts, flags, version overlap, rollback, and compatibility. | `[deploy]` |
-| `/assumptions --failure` | Focus on retries, partial failure, dependencies, timeouts, queues, and recovery. | `[failure]` |
-| `/assumptions --concurrency` | Focus on races, duplicate delivery, locking, atomicity, and idempotency. | `[concurrency]` |
-| `/assumptions --security` | Focus on identity, authorization, tenancy, secrets, trust boundaries, and data exposure. | `[security]` |
-| `/assumptions --tests` | Produce falsification tests only. | All (filtering happens on output, not investigation) |
-| `/assumptions --compact` | Produce a short PR-ready ledger. | All (filtering happens on output, not investigation) |
+| `/assumptions-scan` | Analyze the current diff or requested scope. | All |
+| `/assumptions-scan <file or symbol>` | Analyze one code path, module, endpoint, worker, or function. | All |
+| `/assumptions-scan --deploy` | Focus on migrations, rollouts, flags, version overlap, rollback, and compatibility. | `[deploy]` |
+| `/assumptions-scan --failure` | Focus on retries, partial failure, dependencies, timeouts, queues, and recovery. | `[failure]` |
+| `/assumptions-scan --concurrency` | Focus on races, duplicate delivery, locking, atomicity, and idempotency. | `[concurrency]` |
+| `/assumptions-scan --security` | Focus on identity, authorization, tenancy, secrets, trust boundaries, and data exposure. | `[security]` |
+| `/assumptions-scan --tests` | Produce falsification tests only. | All (filtering happens on output, not investigation) |
+| `/assumptions-scan --compact` | Produce a short PR-ready ledger. | All (filtering happens on output, not investigation) |
 
 Category tags match the ones used in step 3 of the Investigation
 procedure. A mode restricts which categories are investigated; it does
@@ -213,7 +213,7 @@ Produce the same investigation and the same Core standard, but render
 only:
 
 ```
-# Assumption Ledger: <scope> (compact)
+# Assumptions: <scope> (compact)
 
 **Overall risk:** <Low | Medium | High> · **Release blockers:** <count>
 

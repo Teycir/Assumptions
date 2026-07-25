@@ -3,7 +3,7 @@
 ## Input
 
 ```
-/assumptions --compact
+/assumptions-scan --compact
 ```
 
 Run against `fixtures/duplicate-checkout/checkout.ts` (see
@@ -13,7 +13,7 @@ findings this fixture produces in default mode).
 ## Output ledger
 
 ```
-# Assumption Ledger: checkout.ts (compact)
+# Assumptions: checkout.ts (compact)
 
 **Overall risk:** High · **Release blockers:** 1
 

@@ -19,7 +19,7 @@ scope.
 ## Output ledger
 
 ```
-# Assumption Ledger: Add "get invoice by id" endpoint
+# Assumptions: Add "get invoice by id" endpoint
 
 **Scope:** src/routes/invoices.ts
 **Overall risk:** High

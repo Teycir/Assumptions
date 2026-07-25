@@ -1,7 +1,8 @@
-# Assumption Ledger
+# Assumptions
 
-> A Claude Code skill that turns a code change into an evidence-backed ledger
-> of hidden assumptions, failure modes, and falsification tests.
+> An agent-agnostic coding skill that turns a code change into an
+> evidence-backed ledger of hidden assumptions, failure modes, and
+> falsification tests.
 
 **Find what your code assumes before production proves it wrong.**
 
@@ -16,7 +17,7 @@ They happen because a change silently assumes something will remain true:
 - "This record belongs to the current tenant."
 - "A user cannot click the button twice."
 
-Assumption Ledger asks one question:
+Assumptions asks one question:
 
 > **What must be true for this change not to break in production?**
 
@@ -33,7 +34,7 @@ It then produces a reviewable artifact:
 ## Example
 
 ```
-/assumptions
+/assumptions-scan
 ```
 
 ```
@@ -45,20 +46,22 @@ It then produces a reviewable artifact:
 
 ## Installation
 
-Copy this repository into your Claude Code skills directory, or reference
-`SKILL.md` directly from your agent configuration. No build step is
-required.
+Copy this repository into your coding agent's skills directory, or
+reference `SKILL.md` directly from your agent configuration. Written to
+work with any agent that can read a `SKILL.md`-style instruction file and
+inspect a local Git repository (Claude Code, and other coding agents with
+equivalent capabilities). No build step is required.
 
 ## Usage
 
 ```
-/assumptions
-/assumptions src/billing/create-refund.ts
-/assumptions --deploy "Add a nullable organization_id column, backfill it, then require it"
-/assumptions --concurrency "Can two people redeem the same invite?"
-/assumptions --failure "What happens if Stripe times out after charging the customer?"
-/assumptions --tests src/billing/create-refund.ts
-/assumptions --compact
+/assumptions-scan
+/assumptions-scan src/billing/create-refund.ts
+/assumptions-scan --deploy "Add a nullable organization_id column, backfill it, then require it"
+/assumptions-scan --concurrency "Can two people redeem the same invite?"
+/assumptions-scan --failure "What happens if Stripe times out after charging the customer?"
+/assumptions-scan --tests src/billing/create-refund.ts
+/assumptions-scan --compact
 ```
 
 See `SKILL.md` for the full list of modes and the required output format.
@@ -89,9 +92,9 @@ Assumptions/
 
 ## Privacy and cost
 
-Assumption Ledger is a local, open-source skill. It has no hosted backend,
+Assumptions is a local, open-source skill. It has no hosted backend,
 telemetry, database, or account requirement. You use it with your own
-Claude Code or compatible agent environment.
+coding agent environment.
 
 ## License
 

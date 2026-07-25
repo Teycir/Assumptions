@@ -1,4 +1,4 @@
-# Contributing to Assumption Ledger
+# Contributing to Assumptions
 
 This project stays intentionally small. The value is in a disciplined
 method and a trustworthy output format, not in feature surface area.

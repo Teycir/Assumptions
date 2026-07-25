@@ -20,7 +20,7 @@ invocation with no retry or timeout scenario.
 ## Output ledger
 
 ```
-# Assumption Ledger: Add "retry refund" endpoint
+# Assumptions: Add "retry refund" endpoint
 
 **Scope:** src/refunds/retry.ts (new file)
 **Overall risk:** High

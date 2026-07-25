@@ -19,7 +19,7 @@ No cache invalidation call is added anywhere a user's roles are changed
 ## Output ledger
 
 ```
-# Assumption Ledger: Cache authorization roles on login
+# Assumptions: Cache authorization roles on login
 
 **Scope:** src/auth/roles.ts
 **Overall risk:** Medium

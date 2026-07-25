@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Benchmark cases for the assumption-ledger skill. Each case points at a fixture directory and its expected findings file. See rubric.md for grading instructions.",
+  "description": "Benchmark cases for the assumptions skill. Each case points at a fixture directory and its expected findings file. See rubric.md for grading instructions.",
   "cases": [
     {
       "id": "duplicate-checkout",
