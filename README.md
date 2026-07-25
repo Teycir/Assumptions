@@ -76,6 +76,10 @@ format that's fast to review and hard to hand-wave through. See the
 
 ## 🎯 Use Cases
 
+`/assumptions-scan` below is shorthand for "invoke Assumptions in this
+mode" — see [Usage](#usage) for the host-neutral phrasing and where
+slash-command support depends on your agent host.
+
 | Scenario | What happens without Assumptions | What Assumptions does |
 | :--- | :--- | :--- |
 | **Reviewing a payment or checkout PR** | The reviewer eyeballs the diff for obvious bugs; idempotency and retry behavior go unchecked unless someone happens to ask | `/assumptions-scan` surfaces "is this request processed exactly once?" as a P0 finding, with evidence, a concrete failure mode, and a falsification test to run before merge |
@@ -186,6 +190,27 @@ If your agent doesn't auto-discover skills, paste the contents of
 `SKILL.md` directly into a system prompt or custom instructions field —
 it's a self-contained Markdown document.
 
+### Making the skill get used, not just available
+
+Installing `SKILL.md` makes an agent *able* to run Assumptions; it
+doesn't make the agent run it before every commit. This repo includes
+two lightweight, non-enforcing nudges:
+
+- **`CLAUDE.md`** / **`AGENTS.md`** — repo-level instructions telling
+  Claude Code (and other compatible hosts) to run Assumptions on the
+  staged diff before committing non-trivial changes. These are
+  conventions, not gates — nothing here blocks a commit.
+- **`scripts/assumptions-precommit`** — an opt-in local Git hook that
+  prints a reminder (not a hard block, by default) if no recent
+  Assumptions ledger is found before a commit. Not installed
+  automatically; see the script's header for setup.
+
+Neither mechanism can verify an agent reasoned carefully — they only
+make the review more likely to happen by default. For team-wide or
+merge-blocking enforcement, you'd need CI checks and branch protection,
+which are out of scope for this repository by design (see
+[Privacy and cost](#privacy-and-cost)).
+
 ## Usage
 
 `/assumptions-scan ...` below names the mode you're invoking, not a
@@ -244,9 +269,12 @@ relying on the ledger's `Overall risk` line alone.
 ```
 Assumptions/
 ├── SKILL.md          Core skill definition and output contract
+├── CLAUDE.md          Repo convention: when to run the skill (Claude Code)
+├── AGENTS.md          Same convention, host-neutral phrasing
 ├── README.md         This file
 ├── LICENSE            MIT license
 ├── CONTRIBUTING.md    How to add examples, fixtures, and eval cases
+├── scripts/           Optional local tooling (e.g. pre-commit reminder)
 ├── examples/          Sample ledgers produced against real-world-style diffs
 ├── fixtures/          Small repos with known, documented hidden assumptions
 ├── evals/             Benchmark cases and grading rubric

@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Opt-in local reminder for the Assumptions skill.
+#
+# This is NOT installed automatically and does NOT block commits by
+# default — it only prints a reminder. It has no way to verify an LLM
+# actually reasoned well; it just checks whether a review artifact
+# exists and looks recent, as a nudge rather than a gate.
+#
+# Setup (optional, per-repo, per-developer):
+#   chmod +x scripts/assumptions-precommit
+#   ln -sf ../../scripts/assumptions-precommit .git/hooks/pre-commit
+#
+# To skip the reminder for one commit:
+#   ASSUMPTIONS_SKIP=1 git commit -m "..."
+#
+# To make this a hard gate instead of a reminder, change WARN_ONLY below.
+
+set -euo pipefail
+
+WARN_ONLY=1
+LEDGER=".assumptions/latest.md"
+
+if [[ "${ASSUMPTIONS_SKIP:-0}" == "1" ]]; then
+  exit 0
+fi
+
+# Nothing staged: nothing to review.
+if git diff --cached --quiet 2>/dev/null; then
+  exit 0
+fi
+
+if [[ ! -f "$LEDGER" ]]; then
+  echo "" >&2
+  echo "Reminder: no Assumptions ledger found at $LEDGER" >&2
+  echo "Consider running: \"Use Assumptions to review the current diff.\"" >&2
+  echo "Skip this reminder once: ASSUMPTIONS_SKIP=1 git commit ..." >&2
+  echo "" >&2
+  if [[ "$WARN_ONLY" == "1" ]]; then
+    exit 0
+  else
+    exit 1
+  fi
+fi
+
+# Ledger exists — check it's newer than the last commit as a rough
+# freshness signal. Not a cryptographic guarantee, just a nudge.
+if [[ -n "$(git log -1 --format=%ct 2>/dev/null || true)" ]]; then
+  last_commit_ts="$(git log -1 --format=%ct)"
+  ledger_ts="$(stat -c %Y "$LEDGER" 2>/dev/null || stat -f %m "$LEDGER" 2>/dev/null || echo 0)"
+  if (( ledger_ts < last_commit_ts )); then
+    echo "" >&2
+    echo "Reminder: $LEDGER looks older than your last commit." >&2
+    echo "Consider re-running Assumptions on the current staged diff." >&2
+    echo "" >&2
+  fi
+fi
+
+exit 0
