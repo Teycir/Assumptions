@@ -31,6 +31,43 @@ It then produces a reviewable artifact:
 - a recommended control
 - confidence and release priority
 
+---
+
+## 🎯 Use Cases
+
+| Scenario | What happens without Assumptions | What Assumptions does |
+| :--- | :--- | :--- |
+| **Reviewing a payment or checkout PR** | The reviewer eyeballs the diff for obvious bugs; idempotency and retry behavior go unchecked unless someone happens to ask | `/assumptions-scan` surfaces "is this request processed exactly once?" as a P0 finding, with evidence, a concrete failure mode, and a falsification test to run before merge |
+| **Shipping a schema migration alongside app code** | The migration and the code that reads the new column ship together and "probably" deploy in the right order | `/assumptions-scan --deploy` checks for NOT NULL columns with no default, missing backfills, and code that assumes the migration has already completed |
+| **Adding a new authenticated endpoint** | Authentication is confirmed, but whether the query is scoped to the caller's tenant is assumed rather than verified | `/assumptions-scan --security` flags queries that filter only by primary key with no tenant/ownership clause, and proposes a concrete cross-tenant falsification test |
+| **Writing a queue consumer or webhook handler** | At-least-once delivery, duplicate events, and out-of-order arrival are edge cases nobody explicitly tested | `/assumptions-scan --concurrency` or `--failure` identifies missing idempotency keys and ordering assumptions, each with a reproducible test |
+| **Preparing a release / writing the PR description** | The PR description says "tested locally," with no structured list of what could still break in production | `/assumptions-scan --compact` produces a short, PR-ready table of P0/P1 risks the reviewer can act on directly |
+| **Turning a risk into a regression test** | Someone identifies a risk in review, but writing the actual test is left as a follow-up that often never happens | `/assumptions-scan --tests` outputs ready-to-write falsification tests for every finding, ordered by priority |
+| **Onboarding to an unfamiliar codebase or diff** | A large or unfamiliar diff gets a shallow pass because there's too much to hold in your head at once | The skill's oversized-scope handling picks the highest-risk subset (auth, payments, migrations, concurrency-sensitive paths) and explicitly states what was excluded |
+| **Deciding whether a concern is worth blocking on** | Findings get flagged as "critical" based on gut feel, or dismissed as "probably fine" with no real justification | Every finding carries an explicit confidence label (Verified / Likely / Unknown / Assumption to verify) and priority (P0–P3), so severity is argued from evidence, not vibes |
+
+---
+
+## 📑 Table of Contents
+
+- [Assumptions](#assumptions)
+  - [🎯 Use Cases](#-use-cases)
+  - [📑 Table of Contents](#-table-of-contents)
+  - [Example](#example)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [What this is not](#what-this-is-not)
+  - [Repository layout](#repository-layout)
+  - [Privacy and cost](#privacy-and-cost)
+  - [Support Development](#support-development)
+  - [🌐 Related Projects](#-related-projects)
+    - [Privacy \& Encryption](#privacy--encryption)
+    - [Security Tools](#security-tools)
+    - [MCP Security Servers](#mcp-security-servers)
+  - [License](#license)
+
+---
+
 ## Example
 
 ```
@@ -95,6 +132,56 @@ Assumptions/
 Assumptions is a local, open-source skill. It has no hosted backend,
 telemetry, database, or account requirement. You use it with your own
 coding agent environment.
+
+---
+
+<!-- donation:eth:start -->
+<div align="center">
+
+## Support Development
+
+If this project helps your work, support ongoing maintenance and new features.
+
+**ETH Donation Wallet**  
+`0x11282eE5726B3370c8B480e321b3B2aA13686582`
+
+<a href="https://etherscan.io/address/0x11282eE5726B3370c8B480e321b3B2aA13686582">
+  <img src="assets/publiceth.svg" alt="Ethereum donation QR code" width="220" />
+</a>
+
+_Scan the QR code or copy the wallet address above._
+
+</div>
+<!-- donation:eth:end -->
+
+---
+
+## 🌐 Related Projects
+
+Explore more privacy-first and security tools:
+
+### Privacy & Encryption
+- **[Timeseal](https://github.com/Teycir/Timeseal)** - Time-locked encryption vault with Dead Man's Switch. AES-256 split-key crypto, ephemeral seals.
+- **[Sanctum](https://github.com/Teycir/Sanctum)** - Zero-trust encrypted vault with cryptographic plausible deniability. XChaCha20-Poly1305, Argon2id.
+- **[GhostChat](https://github.com/Teycir/GhostChat)** - True P2P encrypted chat via WebRTC. No servers, no storage, self-destructing messages.
+- **[xmrproof](https://github.com/Teycir/xmrproof)** - Monero payment verification, 100% client-side.
+- **[GhostReceipt](https://github.com/Teycir/GhostReceipt)** - Anonymous receipt generation with zero-knowledge proofs.
+
+### Security Tools
+- **[BurpAPISecuritySuite](https://github.com/Teycir/BurpAPISecuritySuite)** - Burp Suite extension for API security testing. 15 attack types, 108+ payloads, BOLA/IDOR detection.
+- **[Mcpwn](https://github.com/Teycir/Mcpwn)** - Automated security scanner for Model Context Protocol servers. Detects RCE, path traversal, prompt injection.
+- **[DiffCatcher](https://github.com/Teycir/DiffCatcher)** - Git repo discovery, diff capture, code element extraction.
+- **[HoneypotScan](https://github.com/Teycir/HoneypotScan)** - Honeypot detection service for security research.
+- **[CheckAPI](https://github.com/Teycir/CheckAPI)** - LLM API key validator for multiple providers. Privacy-first, client-side validation.
+- **[SeekYou](https://github.com/Teycir/SeekYou)** - Host intelligence aggregator — unified OSINT across 15 sources for IPs, domains, and ASNs.
+
+### MCP Security Servers
+- **[burp-mcp-server](https://github.com/Teycir/burp-mcp-server)** - MCP server for Burp Suite Professional. Vulnerability scanning via AI assistants.
+- **[nuclei-mcp](https://github.com/Teycir/nuclei-mcp)** - MCP server for Nuclei. Multi-target scanning, severity filtering.
+- **[nmap-mcp](https://github.com/Teycir/nmap-mcp)** - MCP server for Nmap. Stealth recon, vuln/NSE scanning.
+- **[frida-mcp](https://github.com/Teycir/frida-mcp)** - MCP server for Frida. Dynamic instrumentation, SSL pinning bypass.
+
+---
 
 ## License
 
