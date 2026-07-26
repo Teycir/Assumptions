@@ -1,6 +1,6 @@
 {
   "fixture": "duplicate-checkout",
-  "run_label": "v0.3-blind",
+  "run_label": "2026-07-25-sisyphus-deepseek-v4-flash-v0.3",
   "findings": [
     {
       "matches": "duplicate-checkout-idempotency",

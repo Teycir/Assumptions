@@ -410,7 +410,8 @@ Assumptions/
 ├── scripts/           Optional local tooling (e.g. pre-commit reminder)
 ├── examples/          Sample ledgers produced against real-world-style diffs
 ├── fixtures/          Small repos with known, documented hidden assumptions
-├── evals/             Benchmark cases and grading rubric
+├── evals/             Benchmark cases, grading rubric, and evals/runs/ archive
+│                       (provenance-tracked raw ledgers — see evals/runs/README.md)
 └── assets/            Demo media
 ```
 

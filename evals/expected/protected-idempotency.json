@@ -1,0 +1,23 @@
+{
+  "fixture": "protected-idempotency",
+  "source_of_truth": "fixtures/protected-idempotency/EXPECTED_FINDINGS.md",
+  "findings": [],
+  "expected_safeguards": [
+    {
+      "id": "protected-idempotency-verified",
+      "priority": "P0",
+      "required": false,
+      "assumption_concepts": ["idempotency", "duplicate payment", "deduplicated"],
+      "status_allowed": ["Protected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["checkout.ts"]
+    }
+  ],
+  "prohibited_claims": [
+    {
+      "concept": "missing idempotency",
+      "must_not_be": {"status": "Unprotected"},
+      "reason": "Idempotency key is explicitly passed to Stripe and enforced via DB transaction."
+    }
+  ]
+}

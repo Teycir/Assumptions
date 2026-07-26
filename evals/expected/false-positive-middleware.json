@@ -1,0 +1,23 @@
+{
+  "fixture": "false-positive-middleware",
+  "source_of_truth": "fixtures/false-positive-middleware/EXPECTED_FINDINGS.md",
+  "findings": [],
+  "expected_safeguards": [
+    {
+      "id": "protected-body-validation-middleware",
+      "priority": "P0",
+      "required": false,
+      "assumption_concepts": ["validation", "validateBody", "middleware"],
+      "status_allowed": ["Protected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["update-user.ts"]
+    }
+  ],
+  "prohibited_claims": [
+    {
+      "concept": "unvalidated input",
+      "must_not_be": {"status": "Unprotected"},
+      "reason": "validateBody(userUpdateSchema) middleware validates request payload prior to handler execution."
+    }
+  ]
+}

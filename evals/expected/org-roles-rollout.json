@@ -1,0 +1,45 @@
+{
+  "fixture": "org-roles-rollout",
+  "source_of_truth": "fixtures/org-roles-rollout/EXPECTED_FINDINGS.md",
+  "review_plan_required": true,
+  "review_plan_must_select": [
+    "db/003_add_role_column.sql",
+    "src/middleware/require-admin.ts",
+    "src/routes/admin/delete-org.ts",
+    "src/workers/role-sync-worker.ts"
+  ],
+  "review_plan_must_exclude_categories": [
+    "src/ui/*",
+    "src/generated/*",
+    "tests/ui/*",
+    "docs/roles.md",
+    "package.json"
+  ],
+  "findings": [
+    {
+      "id": "org-roles-nullable-role-cross-file",
+      "priority": "P0",
+      "required": true,
+      "assumption_concepts": ["nullable column backfill", "authorization gap", "silent skip", "role sync"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["require-admin.ts", "role-sync-worker.ts"],
+      "notes": "Must reference BOTH consumer files as evidence, not just one — a finding citing only require-admin.ts or only role-sync-worker.ts is a partial, not a hit, per EXPECTED_FINDINGS.md."
+    }
+  ],
+  "prohibited_claims": [
+    {
+      "concept": "excluded file content",
+      "must_not_be": {"status": "Unprotected", "confidence": "High"},
+      "reason": "src/ui/*, src/generated/*, tests/ui/*, docs/roles.md, and package.json have no real source in this fixture (see DIFF_MANIFEST.md) — any specific claim about their contents is fabricated evidence, regardless of status/confidence label."
+    }
+  ],
+  "out_of_scope": [
+    "src/ui/RoleBadge.tsx, AdminPanel.tsx, UserRow.tsx, RoleSelect.tsx — UI-only",
+    "src/ui/styles/admin.css, src/ui/icons/shield.svg — styling/asset only",
+    "src/generated/api-client.ts, types.ts, admin-client.ts, role.pb.ts — generated, not hand-reviewed",
+    "tests/ui/RoleBadge.test.tsx — UI snapshot test",
+    "docs/roles.md — documentation prose",
+    "package.json — unrelated dependency bump"
+  ]
+}

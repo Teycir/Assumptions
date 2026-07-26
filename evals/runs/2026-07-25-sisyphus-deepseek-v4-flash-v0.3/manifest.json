@@ -1,0 +1,15 @@
+{
+  "run_id": "2026-07-25-sisyphus-deepseek-v4-flash-v0.3",
+  "date": "2026-07-25",
+  "model": "DeepSeek V4 Flash",
+  "host": "Sisyphus (agent harness, non-interactive)",
+  "invocation_method": "skill-file-read",
+  "skill_md_commit": "579af7d6176a75c0f99e259de51ef110851f2661",
+  "fixtures_commit": "579af7d6176a75c0f99e259de51ef110851f2661",
+  "blind": true,
+  "grader": "self (same agent that produced the ledgers)",
+  "grader_independent": false,
+  "fixtures_run": ["duplicate-checkout", "migration-rollout", "tenant-leak", "queue-redelivery", "refund-order"],
+  "supersedes_run_id": "2026-07-25-sisyphus-deepseek-v4-flash-v0.2",
+  "notes": "Full blind re-run of all five fixtures against SKILL.md after three targeted patches (observed-vs-inferred test, P0 ranking clarification, step-6 completeness pass) written in response to v0.2 regressions. Backfilled into this archive format retroactively from evals/BASELINE.md and evals/results/v0.3-*.md — this run predates evals/runs/ existing as a directory. All five fixtures scored 1.0 weighted recall and 1.0 precision under self-grading; see evals/BASELINE.md 'Known weaknesses' for the residual self-grading caveat this run does not resolve. v0.2 run (the prior, worse-scoring blind run this one supersedes) was not itself backfilled as a separate evals/runs/ entry — see evals/BASELINE.md for its results table."
+}

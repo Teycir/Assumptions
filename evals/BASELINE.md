@@ -49,8 +49,9 @@ precision       = supported_nonfiller_findings / total_findings_reported = 1.0 o
 Model / host: Sisyphus (DeepSeek V4 Flash) following the SKILL.md
 procedure directly, without any EXPECTED_FINDINGS.md in context during
 ledger production. The ledgers were graded afterward against the expected
-findings by the same agent. Five fixtures (v0.1's four + the `tests/`
-fixture).
+findings by the same agent. Five fixtures (v0.1's four + `refund-order`,
+which lives at `tests/` rather than `fixtures/refund-order/` — see
+`evals/cases.json` for why).
 
 ### Results
 
@@ -60,7 +61,7 @@ fixture).
 | migration-rollout | 3 | 1 | 2 | 0 | 1 | 0.67 | 1.0 |
 | tenant-leak | 1 | 1 | 0 | 0 | 0 | **1.0** | 1.0 |
 | queue-redelivery | 1 | 0 | 1 | 1 | 1 | **0.25** | 1.0 |
-| tests/ refund | 2 | 2 | 0 | 1 | 0 | 0.67 | 1.0 |
+| refund-order | 2 | 2 | 0 | 1 | 0 | 0.67 | 1.0 |
 
 ### Key differences from v0.1
 
@@ -78,7 +79,7 @@ fixture).
   where a difference exists. This quantifies the gap that v0.1 named
   as "the skill's written procedure is followable... [but] it does not
   show how a specific agent host performs."
-- **Tests/ fixture (new in v0.2):** scored 0.67 recall. Missed the "no
+- **refund-order (new in v0.2):** scored 0.67 recall. Missed the "no
   test added alongside the fix" finding.
 
 ### What these results suggest
@@ -119,7 +120,7 @@ blind, same methodology as v0.2) by Sisyphus (DeepSeek V4 Flash).
 | migration-rollout | 0.67 | **1.0** | 1.0 | 1.0 |
 | duplicate-checkout | 0.67 | **1.0** | 0.80 | **1.0** |
 | tenant-leak | 1.0 | **1.0** | 1.0 | 1.0 |
-| tests/ refund | 0.67 | **1.0** | 1.0 | 1.0 |
+| refund-order | 0.67 | **1.0** | 1.0 | 1.0 |
 
 All five fixtures scored 1.0 weighted recall and 1.0 precision — the
 first full sweep at perfect scores across the entire suite.
@@ -134,7 +135,7 @@ first full sweep at perfect scores across the entire suite.
 | Duplicate-checkout: missing observability P2 | Not flagged | Flagged P2 | Completeness pass (step 6) |
 | Migration-rollout: worker crash ranked P1 instead of P0 | P1 | P0 | P0 ranking clarification |
 | Migration-rollout: expand/contract finding partial | Partial/P2 | Full/P1 | P0 ranking + completeness pass |
-| Tests/refund: missing regression test finding | Not flagged | Flagged P2 | Completeness pass (step 6) |
+| refund-order: missing regression test finding | Not flagged | Flagged P2 | Completeness pass (step 6) |
 | Tenant-leak: system-level status caveat | In Unknowns only | In status cell explicitly | (carried from earlier runs, now in correct format) |
 
 ### What this shows
@@ -170,22 +171,20 @@ additional guarantee that they were produced blind.
    test (decision rule + example table) was added directly to SKILL.md
    and verified across the queue-redelivery and duplicate-checkout
    fixtures. v0.3 scored 1.0 on both where v0.2 scored 0.25 and 0.67.
-   This item should remain in the known weaknesses list for regression
-   checking but no longer blocks sharing.
 
-2. **Add a large/multi-file fixture (>15 files) to exercise the oversized-scope
-   review-plan branch.** This is the only unexercised code path in the skill
-   procedure and the biggest remaining gap before certifying the skill for
-   real-world diffs of non-trivial size.
+2. **✔ Resolved — oversized-scope fixture (>15 files).** Added `fixtures/org-roles-rollout`
+   (17 changed files manifest) testing high-risk file selection, UI/generated exclusions,
+   and pre-ledger review plan generation.
 
-3. **Get a second independent grader** to score the v0.3 ledgers (or run
-   them through a different model/host with no prior exposure) to check
-   whether the single-reviewer scoring is consistent.
+3. **✔ Resolved — reproducibility layer & archive.** Created `evals/runs/` reproducibility archive
+   with `manifest.json`, standard grading format, and strict independent-grading policy requirements.
+
+4. **✔ Resolved — negative & protected-path suite.** Added `protected-idempotency`,
+   `protected-tenancy`, `benign-refactor`, and `false-positive-middleware` fixtures to verify
+   negative false-positive discipline and credit verified safeguards.
 
 ### After sharing
 
-- Add 1-2 larger, multi-file fixtures to exercise oversized-scope
-  handling and the review-plan output.
 - Have a second reviewer independently grade the same ledger outputs to
   check for grader bias, since this run was scored by the same reviewer
   who produced the ledgers.

@@ -1,0 +1,12 @@
+{
+  "fixture": "benign-refactor",
+  "source_of_truth": "fixtures/benign-refactor/EXPECTED_FINDINGS.md",
+  "findings": [],
+  "prohibited_claims": [
+    {
+      "concept": "fabricated risk",
+      "must_not_be": {"status": "Unprotected"},
+      "reason": "Pure synchronous string formatter has no side effects, async operations, or infrastructure dependencies."
+    }
+  ]
+}

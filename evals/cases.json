@@ -1,9 +1,10 @@
 {
-  "version": 1,
-  "description": "Benchmark cases for the assumptions skill. Each case points at a fixture directory and its expected findings file. See rubric.md for grading instructions.",
+  "version": 2,
+  "description": "Benchmark cases for the assumptions skill. Each case points at a fixture directory and its expected findings file. See rubric.md for grading instructions. `fixture_kind` distinguishes static single-purpose fixtures (fixtures/<id>/, paired with EXPECTED_FINDINGS.md) from the tests/ staged-diff sandbox (a small standalone repo used to test the skill against a live git diff rather than static files; paired with test-notes/EXPECTED.md). Both kinds share the same evals/expected/<id>.json + evals/results/<id>-ledger.md naming convention regardless of which directory the source files live in.",
   "cases": [
     {
       "id": "duplicate-checkout",
+      "fixture_kind": "static",
       "fixture_path": "fixtures/duplicate-checkout",
       "input_files": ["checkout.ts"],
       "expected_findings_file": "EXPECTED_FINDINGS.md",
@@ -12,6 +13,7 @@
     },
     {
       "id": "migration-rollout",
+      "fixture_kind": "static",
       "fixture_path": "fixtures/migration-rollout",
       "input_files": ["migration.sql", "worker.ts"],
       "expected_findings_file": "EXPECTED_FINDINGS.md",
@@ -20,6 +22,7 @@
     },
     {
       "id": "tenant-leak",
+      "fixture_kind": "static",
       "fixture_path": "fixtures/tenant-leak",
       "input_files": ["invoices.ts"],
       "expected_findings_file": "EXPECTED_FINDINGS.md",
@@ -28,6 +31,7 @@
     },
     {
       "id": "queue-redelivery",
+      "fixture_kind": "static",
       "fixture_path": "fixtures/queue-redelivery",
       "input_files": ["worker.ts"],
       "expected_findings_file": "EXPECTED_FINDINGS.md",
@@ -36,11 +40,57 @@
     },
     {
       "id": "refund-order",
+      "fixture_kind": "staged-diff-sandbox",
       "fixture_path": "tests",
       "input_files": ["src/billing/refund.ts"],
       "expected_findings_file": "test-notes/EXPECTED.md",
       "must_hit_priorities": ["P0"],
-      "notes": "A diff that adds ownership verification to a refund endpoint. Tests whether the skill correctly credits the added safeguard while still identifying remaining risks (no idempotency, partial failure window, no test added)."
+      "notes": "A diff that adds ownership verification to a refund endpoint. Tests whether the skill correctly credits the added safeguard while still identifying remaining risks (no idempotency, partial failure window, no test added). Lives at tests/ rather than fixtures/refund-order/ because it is a small standalone repo (own package.json, .claude/skills/, staged git diff) used to test a live skill invocation against real diff mechanics, not a static code sample. The canonical identifier everywhere in this repo (evals/expected/, evals/results/, README.md, evals/BASELINE.md) is `refund-order`; `refund-ownership` and `tests-refund` seen in older evals/results/ filenames are retired aliases, not separate cases."
+    },
+    {
+      "id": "org-roles-rollout",
+      "fixture_kind": "static-oversized-scope",
+      "fixture_path": "fixtures/org-roles-rollout",
+      "input_files": ["DIFF_MANIFEST.md (17 files; only db/003_add_role_column.sql, src/middleware/require-admin.ts, src/routes/admin/delete-org.ts, src/workers/role-sync-worker.ts have real source)"],
+      "expected_findings_file": "EXPECTED_FINDINGS.md",
+      "must_hit_priorities": ["P0"],
+      "notes": "Exercises the >15-file oversized-scope / review-plan branch of SKILL.md step 1, which no other fixture in this suite touches. Tests two things together: (1) whether the review plan correctly selects all four high-risk files and explicitly names what it excluded, not a silent subset; (2) whether a hidden risk that spans two of the selected files (a nullable migration column mishandled differently by an authorization middleware and a background worker) is caught as one connected finding rather than only its first-discovered half. Grading this case requires checking the review plan's selection/exclusion completeness in addition to the normal ledger rubric — see EXPECTED_FINDINGS.md's 'Expected review plan' section."
+    },
+    {
+      "id": "protected-idempotency",
+      "fixture_kind": "static-protected",
+      "fixture_path": "fixtures/protected-idempotency",
+      "input_files": ["checkout.ts"],
+      "expected_findings_file": "EXPECTED_FINDINGS.md",
+      "must_hit_priorities": [],
+      "notes": "Tests whether the skill credits explicit provider idempotency key and DB unique constraint safeguards as Protected, rather than fabricating a missing idempotency defect."
+    },
+    {
+      "id": "protected-tenancy",
+      "fixture_kind": "static-protected",
+      "fixture_path": "fixtures/protected-tenancy",
+      "input_files": ["invoices.ts"],
+      "expected_findings_file": "EXPECTED_FINDINGS.md",
+      "must_hit_priorities": [],
+      "notes": "Tests whether explicit query tenant predicate is recognized as Protected without falsely claiming a tenant isolation defect."
+    },
+    {
+      "id": "benign-refactor",
+      "fixture_kind": "static-benign",
+      "fixture_path": "fixtures/benign-refactor",
+      "input_files": ["formatters.ts", "formatters.test.ts"],
+      "expected_findings_file": "EXPECTED_FINDINGS.md",
+      "must_hit_priorities": [],
+      "notes": "Tests negative false-positive discipline on a pure synchronous refactor with zero side effects or hidden assumptions."
+    },
+    {
+      "id": "false-positive-middleware",
+      "fixture_kind": "static-protected",
+      "fixture_path": "fixtures/false-positive-middleware",
+      "input_files": ["update-user.ts"],
+      "expected_findings_file": "EXPECTED_FINDINGS.md",
+      "must_hit_priorities": [],
+      "notes": "Tests whether the skill inspects attached validation middleware on the route pipeline before declaring input unvalidated."
     }
   ]
 }

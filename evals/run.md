@@ -49,22 +49,36 @@ are not scripted here on purpose:
    ```
    Use Assumptions to review fixtures/duplicate-checkout/checkout.ts
    ```
-2. Grade the produced ledger against `fixtures/duplicate-checkout/EXPECTED_FINDINGS.md`
+2. Archive the raw ledger and its provenance under
+   `evals/runs/<run-id>/` before grading — see `evals/runs/README.md`
+   for the `manifest.json` fields (model, host, `SKILL.md` commit,
+   fixture commit, whether the run was blind). Do this even for a
+   single-fixture run; a ledger with no recorded provenance can't be
+   distinguished from a stale one six months later.
+3. Grade the produced ledger against `fixtures/duplicate-checkout/EXPECTED_FINDINGS.md`
    using `evals/rubric.md`'s hit/partial/miss definitions — by hand, or
-   by asking an LLM grader to do it (this is what produced
-   `evals/results/v0.3-grade.md` in earlier runs).
-3. Translate the graded result into `evals/produced/<fixture>.json`
+   by asking an LLM grader to do it — and write it up as
+   `evals/runs/<run-id>/grade.md` using the template in
+   `evals/runs/README.md`.
+4. Translate the graded result into `evals/produced/<fixture>.json`
    (see `evals/schema.md` for the format) — one entry per produced
    finding, with `matches` pointing at the expected finding's `id`, or
-   `null` for an unmatched extra finding.
-4. Score it:
+   `null` for an unmatched extra finding. Set `run_label` to the same
+   `<run-id>` used in step 2 so the machine-scored snapshot and the
+   archived raw run stay linked.
+5. Score it:
    ```
    python3 evals/score.py evals/produced/duplicate-checkout.json
    ```
-5. To check all fixtures at once and fail loudly on a regression:
+6. To check all fixtures at once and fail loudly on a regression:
    ```
    python3 evals/score.py evals/produced/*.json --gate
    ```
+7. Before updating `README.md`'s Benchmarks table or closing out a
+   regression in `BASELINE.md`, confirm the run meets the independent-
+   grading requirement in `evals/runs/README.md` — a self-graded run
+   (`grader_independent: false`) can be archived but not used alone to
+   update headline numbers.
 
 ## Using this in CI
 

@@ -1,0 +1,23 @@
+{
+  "fixture": "protected-tenancy",
+  "source_of_truth": "fixtures/protected-tenancy/EXPECTED_FINDINGS.md",
+  "findings": [],
+  "expected_safeguards": [
+    {
+      "id": "protected-tenancy-verified",
+      "priority": "P0",
+      "required": false,
+      "assumption_concepts": ["tenant isolation", "cross-tenant", "tenantId"],
+      "status_allowed": ["Protected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["invoices.ts"]
+    }
+  ],
+  "prohibited_claims": [
+    {
+      "concept": "tenant leak",
+      "must_not_be": {"status": "Unprotected"},
+      "reason": "Query explicitly filters by req.user.tenantId."
+    }
+  ]
+}

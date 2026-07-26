@@ -1,0 +1,33 @@
+# Assumptions: fixtures/duplicate-checkout/checkout.ts
+
+**Scope:** `fixtures/duplicate-checkout/checkout.ts` (19 lines) — POST /checkout creates a Stripe charge then an order record.
+**Overall risk:** High
+**Release blockers:** 1
+
+## Executive summary
+
+The endpoint has no idempotency protection on the payment call, so a retry or double-submit creates duplicate charges — the primary release blocker. There's also no transactional link between the charge and the order write, so a failure after a successful charge leaves an orphaned payment with no automatic detection. Whether input like `amount` is validated can't be called from this file alone, since no router or middleware layer is in scope.
+
+## Ledger
+
+| Priority | Assumption | Evidence | If false | Status | Falsification test | Recommended action | Evidence confidence |
+|---|---|---|---|---|---|---|---|
+| P0 | Duplicate checkout requests are prevented or safely deduplicated | `checkout.ts:8-11` — `stripe.charges.create()` has no `idempotencyKey`; `orders.create()` has no unique constraint tying it to a request | A retry or double-click creates two charges for one logical checkout | Unprotected — no idempotency key or dedup check found in `checkout.ts` | Submit two identical checkout requests concurrently; assert exactly one charge and one order exist | Pass a stable idempotency key to `stripe.charges.create()` (e.g. derived from a client request ID) | High |
+| P1 | Payment and order creation succeed or fail together | `checkout.ts:8-15` — charge is created, then `orders.create()` runs afterward with no transaction or compensating action | Customer is charged but no order exists if `orders.create()` throws after a successful charge | Unprotected — no transaction or rollback/refund path found in `checkout.ts` | Force `orders.create()` to throw after a successful charge; verify whether the charge is refunded, retried, or left orphaned | Wrap both calls in a transaction, or add a compensating refund/retry path on order-write failure | High |
+| P2 | An orphaned charge (paid, no matching order) is detected in reasonable time | `checkout.ts` — no logging, metric, or alert around a charge/order mismatch anywhere in the file | An orphaned charge goes undetected until a customer complains | Unprotected — no observability path found in `checkout.ts` | N/A — a process/observability gap, not directly testable | Add a metric or reconciliation job comparing successful charges to created orders | Medium |
+| P2 | `req.body.amount` is validated before being sent to Stripe | `checkout.ts:9` — `amount: req.body.amount` passed directly with no type, range, or null check visible in this file | A malformed or unintended amount is charged if no validation exists anywhere in the request path | Unknown — no router, middleware, or schema-validation layer was inspected; validation may exist upstream of this handler | Trace the route registration for /checkout and confirm whether request validation middleware runs before this handler | Confirm or add input validation on `amount` before the charge call | Low |
+
+## Existing safeguards
+
+- None found in the reviewed scope (`checkout.ts` only; router, middleware, and infrastructure config not inspected).
+
+## Required verification before release
+
+- [ ] Add an idempotency key to the Stripe charge call.
+- [ ] Add transactional or compensating-action protection between charge and order creation.
+- [ ] Confirm whether request-level validation exists upstream for `amount`.
+
+## Unknowns and boundaries
+
+- Router-level middleware (auth, validation, rate limiting) was not inspected — the endpoint may already be protected upstream for some of these concerns.
+- Stripe webhook or reconciliation logic that might independently catch orphaned charges was not reviewed.

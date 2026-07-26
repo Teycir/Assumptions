@@ -139,6 +139,37 @@ def score_fixture(produced_path: Path) -> dict:
         (total_reported - unsupported) / total_reported if total_reported else 1.0
     )
 
+    # Review-plan check: only applies to oversized-scope fixtures that
+    # declare review_plan_required in evals/expected/<fixture>.json.
+    # The producer records what it actually selected/excluded in
+    # evals/produced/<fixture>.json's "review_plan_selected" /
+    # "review_plan_excluded" arrays (file paths, or path globs matching
+    # the expected exclude categories). Fixtures with no such
+    # requirement are unaffected — this block is a no-op for them.
+    review_plan_ok = True
+    review_plan_notes = []
+    if expected.get("review_plan_required"):
+        must_select = set(expected.get("review_plan_must_select", []))
+        selected = set(produced.get("review_plan_selected", []))
+        missing_selects = must_select - selected
+        if missing_selects:
+            review_plan_ok = False
+            review_plan_notes.append(
+                f"review plan did not select required high-risk file(s): {sorted(missing_selects)}"
+            )
+        if not produced.get("review_plan_excluded"):
+            review_plan_ok = False
+            review_plan_notes.append(
+                "no review_plan_excluded list provided — an oversized-scope run "
+                "must explicitly name what it excluded, not silently omit it"
+            )
+        if "review_plan_selected" not in produced and "review_plan_excluded" not in produced:
+            review_plan_notes.append(
+                "this fixture requires a review plan but the produced JSON has no "
+                "review_plan_selected/review_plan_excluded fields — grade the plan "
+                "manually against EXPECTED_FINDINGS.md and fill these in"
+            )
+
     return {
         "fixture": fixture,
         "run_label": produced.get("run_label", "(unlabeled)"),
@@ -149,6 +180,9 @@ def score_fixture(produced_path: Path) -> dict:
         "violations": violations,
         "weighted_recall": round(weighted_recall, 3),
         "precision": round(precision, 3),
+        "review_plan_required": bool(expected.get("review_plan_required")),
+        "review_plan_ok": review_plan_ok,
+        "review_plan_notes": review_plan_notes,
     }
 
 
@@ -182,11 +216,18 @@ def main():
         if r["violations"]:
             for v in r["violations"]:
                 print(f"  ⚠ {v['type']} on '{v['finding']}': {v['detail']}")
+        if r["review_plan_required"]:
+            status = "OK" if r["review_plan_ok"] else "FAILED"
+            print(f"  review plan: {status}")
+            for note in r["review_plan_notes"]:
+                print(f"    ⚠ {note}")
 
         if args.gate:
             if r["required_misses"]:
                 gate_failed = True
             if r["weighted_recall"] < args.min_recall:
+                gate_failed = True
+            if r["review_plan_required"] and not r["review_plan_ok"]:
                 gate_failed = True
 
     if args.gate:

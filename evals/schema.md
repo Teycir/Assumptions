@@ -70,8 +70,24 @@ Field notes:
   the ledger must credit; failing to credit one when evidence supports it
   is scored as a miss on precision (the ledger inappropriately treats a
   real fix as absent).
+- `review_plan_required` (optional, default `false`) — set `true` for
+  oversized-scope fixtures (see `SKILL.md`'s "Oversized scope" /
+  "Two-stage output" rule in the Investigation procedure). When set,
+  `score.py` also checks the produced JSON's `review_plan_selected` /
+  `review_plan_excluded` fields, not just `findings`.
+- `review_plan_must_select` (required if `review_plan_required` is
+  `true`) — the file paths a correct review plan must select for the
+  high-risk pass. Any path in this list missing from the produced
+  `review_plan_selected` array is a gate failure under `--gate`.
+- `review_plan_must_exclude_categories` (optional, documentation only —
+  not mechanically checked) — the categories of files a correct plan
+  should name as excluded, for a human/LLM grader's reference. `score.py`
+  only checks that `review_plan_excluded` is non-empty, not that it
+  matches this list exactly, since exclusion is usually stated as
+  categories/globs rather than an exhaustive file list.
 
 ## `evals/produced/<fixture>.json` (per run)
+
 
 Not checked into version control by default — this is what a grader
 (human or scripted) fills in after reading a produced ledger, to hand to
