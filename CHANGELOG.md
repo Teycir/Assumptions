@@ -5,6 +5,22 @@ follows [Keep a Changelog](https://keepachangelog.com/) conventions.
 
 ---
 
+## [1.1.0] — 2026-07-26
+
+### Added
+- **Reproducibility Archive (`evals/runs/`):** Standardized run archive format with `manifest.json` metadata (model, host, commit hashes, blind flag), `grade.md` template, and strict independent-grading rules.
+- **Oversized-Scope Fixture (`fixtures/org-roles-rollout`):** 17-file diff manifest fixture testing high-risk file selection, UI/generated exclusions, and pre-ledger Review Plan generation.
+- **Negative & Protected-Path Suite:**
+  - `protected-idempotency`: Credits explicit provider idempotency keys and DB unique constraints as Protected.
+  - `protected-tenancy`: Credits explicit query tenant filters (`tenantId`).
+  - `benign-refactor`: Tests false-positive discipline on pure synchronous refactors (0 reportable defects).
+  - `false-positive-middleware`: Verifies route middleware validation (`validateBody`) is credited prior to handler execution.
+- Added fixture expectation schemas in `evals/expected/` and registered cases in `evals/cases.json`.
+
+### Fixed
+- Navigation and Table of Contents anchor links in `README.md` aligned with GitHub Flavored Markdown slug rules (`#how-it-works`, `#use-cases`).
+- Standardized `refund-order` as the canonical identifier across `evals/cases.json`, `BASELINE.md`, and test suites.
+
 ## [1.0.0] — 2026-07-26
 
 ### Added
@@ -100,4 +116,5 @@ follows [Keep a Changelog](https://keepachangelog.com/) conventions.
 
 ---
 
+[1.1.0]: https://github.com/Teycir/Assumptions/releases/tag/v1.1.0
 [1.0.0]: https://github.com/Teycir/Assumptions/releases/tag/v1.0.0
