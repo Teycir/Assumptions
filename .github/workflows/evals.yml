@@ -1,0 +1,26 @@
+name: evals
+
+on:
+  push:
+    paths:
+      - "SKILL.md"
+      - "evals/**"
+  pull_request:
+    paths:
+      - "SKILL.md"
+      - "evals/**"
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Score checked-in eval runs
+        run: |
+          if ls evals/produced/*.json >/dev/null 2>&1; then
+            python3 evals/score.py evals/produced/*.json --gate
+          else
+            echo "No evals/produced/*.json snapshots checked in yet — nothing to gate on."
+            echo "See evals/run.md for how to produce one."
+          fi

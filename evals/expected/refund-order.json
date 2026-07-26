@@ -1,0 +1,53 @@
+{
+  "fixture": "refund-order",
+  "source_of_truth": "tests/test-notes/EXPECTED.md",
+  "findings": [
+    {
+      "id": "refund-order-no-idempotency-key",
+      "priority": "P0",
+      "required": true,
+      "assumption_concepts": ["idempotency", "duplicate refund", "retry"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["High", "Medium"],
+      "evidence_must_reference": ["refund.ts"],
+      "notes": "Unchanged by this diff — must still be reported as Unprotected, not silently dropped because the diff's headline change (ownership check) is elsewhere."
+    },
+    {
+      "id": "refund-order-ownership-check-depends-on-req-user",
+      "priority": "P1",
+      "required": true,
+      "assumption_concepts": ["ownership check", "authentication", "req.user population"],
+      "status_allowed": ["Unknown", "Partially protected"],
+      "confidence_allowed": ["Medium", "High"],
+      "evidence_must_reference": ["refund.ts"],
+      "notes": "Must NOT be reported as fully Protected unless auth middleware evidence was actually found — the check's real protection is contingent on req.user being populated, which this file alone does not show."
+    },
+    {
+      "id": "refund-order-no-regression-test",
+      "priority": "P2",
+      "required": false,
+      "assumption_concepts": ["regression test", "test coverage", "ownership check"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["refund.ts"]
+    }
+  ],
+  "credited_safeguards": [
+    {
+      "concept": "ownership check (order.userId vs req.user.id)",
+      "credit_as": ["Protected", "Partially protected"],
+      "reason": "The diff visibly adds this check; a correct ledger credits it as a safeguard for the cross-tenant risk specifically, not report the endpoint as still fully Unprotected against cross-tenant access."
+    }
+  ],
+  "prohibited_claims": [
+    {
+      "concept": "ownership check protection level",
+      "must_not_be": {"status": "Unprotected", "confidence": "High"},
+      "reason": "The diff adds a real check; failing to credit it is a miss, not a conservative call."
+    }
+  ],
+  "out_of_scope": [
+    "stripe-webhook.ts (ordering, signature check) — separate file, not part of this staged diff",
+    "db/002_add_org_id.sql — already committed in baseline, not part of this staged diff"
+  ]
+}

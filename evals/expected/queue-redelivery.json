@@ -1,0 +1,37 @@
+{
+  "fixture": "queue-redelivery",
+  "source_of_truth": "fixtures/queue-redelivery/EXPECTED_FINDINGS.md",
+  "findings": [
+    {
+      "id": "queue-redelivery-no-dedup-record",
+      "priority": "P0",
+      "required": true,
+      "assumption_concepts": ["dedup", "at-least-once delivery", "redelivery", "side effect before ack"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["Medium"],
+      "evidence_must_reference": ["worker.ts"],
+      "notes": "The missing dedup record itself is directly observed (High); but the overall finding's confidence must be Medium because the consequence depends on unconfirmed at-least-once queue semantics. A High-confidence label here is a precision violation (see prohibited_claims)."
+    },
+    {
+      "id": "queue-redelivery-no-provider-dedup-token",
+      "priority": "P2",
+      "required": false,
+      "assumption_concepts": ["provider idempotency", "dedup token", "email provider"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["worker.ts"]
+    }
+  ],
+  "prohibited_claims": [
+    {
+      "concept": "queue redelivery consequence",
+      "must_not_be": {"status": "Unprotected", "confidence": "High"},
+      "reason": "At-least-once delivery is the common default but is not confirmed anywhere in this fixture. This is the specific confidence-calibration trap this fixture tests for."
+    },
+    {
+      "concept": "underlying queue technology delivery guarantee",
+      "must_not_be": {"status": "Unprotected", "confidence": "High"},
+      "reason": "Not shown in this fixture; must be Unknown unless confirmed elsewhere in the repository."
+    }
+  ]
+}

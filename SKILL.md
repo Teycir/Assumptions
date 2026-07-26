@@ -38,6 +38,21 @@ Only report an assumption when you can provide all of the following:
    available can produce one. If a line range is unavailable, cite the
    file path and the symbol (function, route, migration file) instead.
    Never present a claim as repository evidence without a locator.
+
+   **Locator accuracy hierarchy:**
+   1. `path:lineStart-lineEnd` — only when the line-numbered source was
+      actually opened and read, not inferred.
+   2. `path — symbol` (function, route, migration file) — when a line
+      range isn't available but the file was opened and the symbol
+      identified.
+   3. If neither is available, do not characterize the claim as direct
+      evidence — treat it as unsupported and either investigate further
+      or downgrade the finding.
+
+   Never infer or guess line numbers from a diff summary, a search-result
+   snippet, or a file listing. A fabricated locator is worse than no
+   locator — it creates false confidence and wastes the reviewer's time
+   verifying something that was never actually read.
 3. A concrete consequence if the assumption is false.
 4. Existing safeguards, or an explicit statement that none were found. A
    "none found" statement must name the scope that was searched (files,
@@ -233,6 +248,16 @@ with runtime or operational knowledge the repository doesn't contain.
    blockers and both get the same priority unless one is clearly narrower
    in scope or likelihood than the other.
 
+   **Priority rationale:** Each finding's priority must carry a one-clause
+   rationale naming what drove the level — plausibility, blast radius, or
+   recoverability — not just the impact category. "Meaningful user impact
+   under plausible production conditions" (the P1 definition) can cover a
+   wide range of real urgency, so state the specific driver, e.g.
+   "P1 because a retry is plausible and can duplicate a customer-visible
+   financial action" or "P2 because the trigger requires an unlikely
+   concurrent-write race." Fold this into the Assumption or Evidence
+   column rather than adding a new table column.
+
 6. Produce the ledger.
    - Prioritize high-evidence-confidence, high-impact findings.
    - Include no more than 10 entries by default.
@@ -366,18 +391,28 @@ this mode," e.g. "Use Assumptions in deploy mode for this migration" and
 
 ### `--tests` output format
 
+This mode still performs the full Core-standard investigation
+internally — including evidence, status, and priority for every
+finding. Only the rendered output is trimmed. Do not emit a test unless
+the underlying finding satisfies the Core standard in full; if asked,
+provide the corresponding complete ledger entry.
+
 Skip the full ledger. For each finding that would otherwise appear,
 output only:
 
 ```
 ### <Priority> — <Assumption, one line>
 
+**Basis:** <one short repository locator — file path, or file:line>
 **Falsification test:** <concrete steps or test code>
 **Proves:** <what a pass/fail result tells you>
 ```
 
-Order findings P0 first. Omit Evidence, Status, and Recommended action —
-those belong in the full ledger, not this mode.
+Order findings P0 first. Omit the full Evidence, Status, and
+Recommended action fields — those belong in the full ledger, not this
+mode — but keep the one-line **Basis** locator so the output stays
+traceable to something actually read in the repository, not merely
+recalled from the investigation.
 
 ### `--compact` output format
 

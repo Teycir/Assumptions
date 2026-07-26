@@ -1,0 +1,40 @@
+{
+  "fixture": "migration-rollout",
+  "source_of_truth": "fixtures/migration-rollout/EXPECTED_FINDINGS.md",
+  "findings": [
+    {
+      "id": "migration-rollout-not-null-no-default",
+      "priority": "P0",
+      "required": true,
+      "assumption_concepts": ["migration compatibility", "NOT NULL", "existing rows", "default value"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["migration.sql"]
+    },
+    {
+      "id": "migration-rollout-worker-null-dereference",
+      "priority": "P0",
+      "required": true,
+      "assumption_concepts": ["worker safety", "null check", "schema transition", "rollout ordering"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["worker.ts"]
+    },
+    {
+      "id": "migration-rollout-expand-contract",
+      "priority": "P1",
+      "required": true,
+      "assumption_concepts": ["expand/contract", "rollback safety", "nullable phase"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["Medium"],
+      "evidence_must_reference": ["migration.sql", "worker.ts"]
+    }
+  ],
+  "prohibited_claims": [
+    {
+      "concept": "deployment platform migration-then-code ordering guarantee",
+      "must_not_be": {"status": "Protected", "confidence": "High"},
+      "reason": "Not present in this fixture; must be Unknown, not assumed either way."
+    }
+  ]
+}

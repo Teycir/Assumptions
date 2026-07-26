@@ -339,6 +339,21 @@ defect and not a confirmed absence of risk. If a finding matters and its
 status is `Unknown`, resolve it against your actual infrastructure before
 relying on the ledger's `Overall risk` line alone.
 
+### Host capability matrix
+
+Output quality depends on what your agent host can actually do, not just
+on whether `SKILL.md` is installed. If a capability below is missing,
+Assumptions still runs — it just leans harder on `Unknown` and narrower
+scope, per the Core standard, rather than guessing.
+
+| Capability | Required? | Impact if unavailable |
+| :--- | :--- | :--- |
+| Read the current Git diff | Preferred | Review may be limited to files or symbols you specify explicitly |
+| Recursive repository search | Required for strong absence claims | More findings default to `Unknown` instead of a confident `Unprotected` |
+| Line-numbered source reads | Preferred | Evidence cites `path — symbol` instead of `path:line` (see the locator hierarchy in `SKILL.md`) |
+| Test/config inspection | Required for protection assessment | Avoid `Protected` / `Unprotected` calls outside the files actually opened |
+| External documentation access | Optional | Third-party service semantics (queue delivery, SDK retry defaults) remain `Unknown` unless captured in-repo |
+
 ## Benchmarks
 
 The skill is evaluated against a suite of curated **fixtures** — small

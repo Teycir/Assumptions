@@ -1,0 +1,40 @@
+{
+  "fixture": "duplicate-checkout",
+  "source_of_truth": "fixtures/duplicate-checkout/EXPECTED_FINDINGS.md",
+  "findings": [
+    {
+      "id": "duplicate-checkout-idempotency",
+      "priority": "P0",
+      "required": true,
+      "assumption_concepts": ["idempotency", "duplicate payment", "retry"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["checkout.ts"]
+    },
+    {
+      "id": "duplicate-checkout-partial-failure",
+      "priority": "P1",
+      "required": true,
+      "assumption_concepts": ["transaction", "partial failure", "compensating action"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["checkout.ts"]
+    },
+    {
+      "id": "duplicate-checkout-observability",
+      "priority": "P2",
+      "required": false,
+      "assumption_concepts": ["reconciliation", "observability", "orphaned charge"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["Medium", "Low"],
+      "evidence_must_reference": ["checkout.ts"]
+    }
+  ],
+  "prohibited_claims": [
+    {
+      "concept": "amount validation",
+      "must_not_be": {"status": "Unprotected", "confidence": "High"},
+      "reason": "Server-side validation elsewhere in the stack was not inspected; correct call is Unknown or lower confidence, per the observed-vs-inferred test."
+    }
+  ]
+}

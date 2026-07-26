@@ -1,0 +1,28 @@
+{
+  "fixture": "tenant-leak",
+  "source_of_truth": "fixtures/tenant-leak/EXPECTED_FINDINGS.md",
+  "findings": [
+    {
+      "id": "tenant-leak-no-scope-in-query",
+      "priority": "P0",
+      "required": true,
+      "assumption_concepts": ["tenant isolation", "IDOR", "cross-tenant access", "query scoping"],
+      "status_allowed": ["Unprotected"],
+      "confidence_allowed": ["High"],
+      "evidence_must_reference": ["invoices.ts"],
+      "notes": "Query-level status must be High-confidence Unprotected; the system-wide question (middleware/RLS elsewhere) must be Unknown, not merged into one label. See prohibited_claims."
+    }
+  ],
+  "prohibited_claims": [
+    {
+      "concept": "system-wide tenant protection (middleware or RLS)",
+      "must_not_be": {"status": "Unprotected", "confidence": "High"},
+      "reason": "Whether middleware or row-level security enforces scoping elsewhere was not inspected in this fixture; overclaiming a confident system-wide Unprotected is the exact trap this fixture tests for. Correct call is Unknown for the system-wide claim, separate from the query-level Unprotected/High."
+    },
+    {
+      "concept": "system-wide tenant protection (middleware or RLS)",
+      "must_not_be": {"status": "Protected", "confidence": "High"},
+      "reason": "Equally wrong in the other direction — no evidence exists either way for the system-wide claim."
+    }
+  ]
+}
