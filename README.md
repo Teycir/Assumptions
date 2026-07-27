@@ -39,6 +39,14 @@
 <br>
 
 <p align="center">
+  <a href="examples/01-duplicate-payment.md">Example 1: Duplicate payment after retry</a> &nbsp;•&nbsp;
+  <a href="examples/02-unsafe-migration.md">Example 2: Unsafe schema migration</a> &nbsp;•&nbsp;
+  <a href="examples/03-cross-tenant-access.md">Example 3: Cross-tenant access</a>
+</p>
+
+<br>
+
+<p align="center">
   <img src="assets/P1.png" alt="Assumptions ledger snapshot" width="850">
 </p>
 <p align="center">
