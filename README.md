@@ -36,7 +36,7 @@
   ▶️ <b><a href="https://youtu.be/N6CU-brB83M">Click to watch the full demo video</a></b>
 </p>
 
-<br>
+---
 
 <p align="center">
   <a href="examples/01-duplicate-payment.md">Example 1: Duplicate payment after retry</a> &nbsp;•&nbsp;
