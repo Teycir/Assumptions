@@ -38,6 +38,18 @@
 
 <br>
 
+<p align="center">
+  <img src="assets/P1.png" alt="Assumptions ledger snapshot" width="850">
+</p>
+<p align="center">
+  <img src="assets/P01.png" alt="Assumptions P0 finding snapshot" width="850">
+</p>
+<p align="center">
+  <img src="assets/P02.png" alt="Assumptions P0 finding snapshot 2" width="850">
+</p>
+
+<br>
+
 **What must be true for this change not to break in production?**
 
 Turn a diff into an evidence-backed **Assumption Ledger**: the conditions
